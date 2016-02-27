@@ -1,0 +1,180 @@
+#!/bin/bash
+# manx -- view man pages in various ways on OS X
+# Execute with no arguments, or read the display_usage function below, for usage info.
+
+# Copyright (c) 2015 Jason Jackson
+#
+# This program is free software; you can redistribute it and/or modify it under the terms
+# of the GNU General Public License as published by the Free Software Foundation;
+# either version 2 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU General Public License (GPLv2.txt) for more details.
+#
+# A copy of the GNU General Public License should accompany this program; if not,
+# see http://www.gnu.org/licenses/gpl-2.0.html or write to the Free Software Foundation,
+# 59 Temple Place, Suite 330, Boston, MA 02111.
+# More details can be found at http://www.gnu.org/licenses/licenses.html.
+
+version=1
+
+function display_usage() {
+	self=`basename $0`
+
+	echo "Usage: $self [options] man-page"
+	echo
+	echo "Options:"
+	echo "    -h, --help      Show this usage information and exit"
+	echo "    -b, --browser   Open man-page in your default browser (man2html required)"
+	echo "    -e, --editor    Open man-page in your default text editor"
+	echo "    -p, --preview   Open man-page in Preview"
+	echo "    -t, --terminal  Open man-page in Terminal's man-page viewer (default)"
+}
+
+# --- Get arguments from the MANX_OPTS environment variable & command line ---
+
+viewer=t  # t means terminal
+ext=
+page=
+
+function parse_args() {
+	for arg in "$@"; do
+		if [[ "$arg" == "" ]]; then
+			continue
+
+		elif [[ "${arg:0:1}" == "-" ]]; then
+			if [[ "$arg" == "-h" || "$arg" == "--help" ]]; then
+				if [[ $parsing_from_env == 1 ]]; then
+					# request for help in MANX_OPTS; ignore it
+					continue
+				else
+					# request for help on command line;
+					# display usage info, and exit without any further action
+					display_usage
+					exit 0
+				fi
+			elif [[ "$arg" == "-b" || "$arg" == "--browser" ]]; then
+				viewer=b
+				ext=html
+			elif [[ "$arg" == "-e" || "$arg" == "--editor" ]]; then
+				viewer=e
+				ext=txt
+			elif [[ "$arg" == "-p" || "$arg" == "--preview" ]]; then
+				viewer=p
+				ext=pdf
+			elif [[ "$arg" == "-t" || "$arg" == "--terminal" ]]; then
+				viewer=t
+				ext=
+			else
+				# unrecognized option
+				if [[ $parsing_from_env == 1 ]]; then
+					source="in the MANX_OPTS environment variable"
+				else
+					source="on command line"
+				fi
+
+				echo Error: Invalid option \"$arg\" $source
+				echo
+				display_usage
+				exit 1
+			fi
+		else
+			if [[ $parsing_from_env == 1 ]]; then
+				# non-option given in MANX_OPTS; ignore it
+				continue	
+			elif [[ "$page" != "" ]]; then
+				# page was already specified in a previous argument
+				echo Error: man page specified more than once \(\"$page\" then \"$arg\"\)
+				echo
+				display_usage
+				exit 1
+			else
+				page="$arg"
+			fi
+		fi
+	done
+}
+
+parsing_from_env=1
+parse_args $MANX_OPTS
+
+parsing_from_env=0
+parse_args "$@"
+
+if [[ "$page" == "" ]]; then
+	display_usage
+	exit 1
+fi
+
+# --- Test to see whether the request man page exists
+
+# if the requested man page doesn't exist, this will display a "No manual entry" error on stderr,
+# and exit with a non-zero status
+page_file=`man -W $page`
+
+if [[ $? != 0 ]]; then
+	exit 1
+fi
+
+# --- Initialize our cache folder, where formatted output files will be stored ---
+
+cache_root=~/Library/Caches/manx
+cache_folder="$cache_root/v$version"
+
+if [[ "$viewer" != "t" ]]; then
+	# create the cache folder, if needed
+	mkdir -p "$cache_folder"
+
+	# build a name for this specific cached file;
+	# the cache folder's name contains the manx version, and the cached file's name contains the OS X version,
+	# so that if either changes, a previously-cached (and maybe now outdated) file will be ignored
+	cache_file="$cache_folder/$page-$(sw_vers -productVersion).$ext"
+
+	# delete any other cached files which are over 30 days old, to avoid unbounded cache growth
+	find "$cache_folder" -type f -mtime +30d -not -path "$cache_file" | xargs rm
+
+	# if any old cache folders exist, remove them
+	find "$cache_root" -type d -depth 1 -not -path "$cache_folder" -print0 | xargs -0 rm -rf
+fi
+
+# --- Open the requested man page, in the requested viewer ---
+
+if [[ "$viewer" == "b" ]]; then
+	# convert the man page to HTML, and open it in the default web browser
+	if [[ ! -f "$cache_file" ]]; then
+		man2html=`which man2html`
+	
+		if [[ "$man2html" == "" ]]; then
+			echo "Error: man2html must be installed to view man pages in a browser."
+			echo "It's available from MacPorts."
+			exit 1
+		fi
+
+		man "$page" | man2html -title "Manual page for: $page" > "$cache_file"
+	fi
+
+	open "$cache_file"
+
+elif [[ "$viewer" == "e" ]]; then
+	# convert the man page to text, and open it in the default text editor
+	if [[ ! -f "$cache_file" ]]; then
+		man "$page" | col -b > "$cache_file"
+	fi
+
+	open "$cache_file"
+
+elif [[ "$viewer" == "p" ]]; then
+	# convert the man page to to PostScript, then PDF, and open it in Preview;
+	# Preview will open PostScript files directly, but always seems to scroll down a bit,
+	# which is annoying, and it doesn't do so with PDFs (version "8.0 (859)" on 10.10.1)
+	if [[ ! -f "$cache_file" ]]; then
+		man -t "$page" | pstopdf -i -o "$cache_file"
+	fi
+
+	open -a Preview.app "$cache_file"
+
+elif [[ "$viewer" == "t" ]]; then
+	# open the man page in Terminal's man-page viewer
+	open "x-man-page://$page"
+fi
