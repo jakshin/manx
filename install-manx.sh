@@ -3,6 +3,7 @@
 # its man page is also installed, in the appropriate directory (/usr/local/share/man/man1 by default)
 
 function failed() {
+	echo
 	echo "Installation failed, sorry. :-/"
 	exit 1
 }
@@ -12,6 +13,8 @@ trap 'failed' ERR
 # if the user requested help, show some o' that
 if [[ $1 == "-h" || $1 == "--help" ]]; then
 	echo "Usage: $(basename "$0") [install_to_dir]"
+	echo
+	echo "The install_to_dir argument is optional, and must be absolute if given."
 	echo "By default, manx will be installed to /usr/local/bin."
 	exit 1
 fi
