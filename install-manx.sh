@@ -52,6 +52,8 @@ tmp_dir="${TMPDIR:-/private/tmp}"
 sudo curl -fsSL https://raw.githubusercontent.com/jakshin/manx/master/manx -o "$tmp_dir/manx"
 sudo curl -fsSL https://raw.githubusercontent.com/jakshin/manx/master/manx.1 -o "$tmp_dir/manx.1"
 
+sudo chmod 755 "$tmp_dir/manx"
+
 # create the target directories, if needed
 if [[ ! -d "$bin_dir" ]]; then
 	sudo mkdir -p "$bin_dir"
