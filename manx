@@ -20,7 +20,7 @@
 version=2
 
 function display_usage() {
-	self=`basename $0`
+	self="$(basename "$0")"
 
 	echo "Usage: $self [options] man-page"
 	echo
@@ -74,7 +74,7 @@ function parse_args() {
 					source="on command line"
 				fi
 
-				echo Error: Invalid option \"$arg\" $source
+				echo "Error: Invalid option \"$arg\" $source"
 				echo
 				display_usage
 				exit 1
@@ -85,7 +85,7 @@ function parse_args() {
 				continue	
 			elif [[ "$page" != "" ]]; then
 				# page was already specified in a previous argument
-				echo Error: man page specified more than once \(\"$page\" then \"$arg\"\)
+				echo "Error: man page specified more than once (\"$page\" then \"$arg\")"
 				echo
 				display_usage
 				exit 1
@@ -97,7 +97,9 @@ function parse_args() {
 }
 
 parsing_from_env=1
-parse_args $MANX_OPTS
+opts=""
+read -a opts -rd '' <<< "$MANX_OPTS"
+parse_args "${opts[@]}"
 
 parsing_from_env=0
 parse_args "$@"
@@ -111,9 +113,7 @@ fi
 
 # if the requested man page doesn't exist, this will display a "No manual entry" error on stderr,
 # and exit with a non-zero status
-page_file=`man -w $page`
-
-if [[ $? != 0 ]]; then
+if ! man -w "$page" > /dev/null; then
 	exit 1
 fi
 
@@ -132,7 +132,7 @@ if [[ "$viewer" != "t" ]]; then
 	cache_file="$cache_folder/$page-$(sw_vers -productVersion).$ext"
 
 	# delete any other cached files which are over 30 days old, to avoid unbounded cache growth
-	find "$cache_folder" -type f -mtime +30d -not -path "$cache_file" | xargs rm
+	find "$cache_folder" -type f -mtime +30d -not -path "$cache_file" -print0 | xargs -0 rm
 
 	# if any old cache folders exist, remove them
 	find "$cache_root" -type d -depth 1 -not -path "$cache_folder" -print0 | xargs -0 rm -rf
@@ -143,7 +143,7 @@ fi
 if [[ "$viewer" == "b" ]]; then
 	# convert the man page to HTML, and open it in the default web browser
 	if [[ ! -f "$cache_file" ]]; then
-		man2html=`which man2html`
+		man2html="$(which man2html)"
 	
 		if [[ "$man2html" == "" ]]; then
 			echo "Error: man2html must be installed to view man pages in a browser."
