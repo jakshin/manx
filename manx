@@ -1,8 +1,8 @@
 #!/bin/bash
-# manx -- view man pages in various ways on OS X
+# manx -- view man pages in various ways on macOS
 # Execute with no arguments, or read the display_usage function below, for usage info.
 
-# Copyright (c) 2015 Jason Jackson
+# Copyright (c) 2015,2024 Jason Jackson
 #
 # This program is free software; you can redistribute it and/or modify it under the terms
 # of the GNU General Public License as published by the Free Software Foundation;
@@ -17,7 +17,7 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111.
 # More details can be found at http://www.gnu.org/licenses/licenses.html.
 
-version=1
+version=2
 
 function display_usage() {
 	self=`basename $0`
@@ -111,7 +111,7 @@ fi
 
 # if the requested man page doesn't exist, this will display a "No manual entry" error on stderr,
 # and exit with a non-zero status
-page_file=`man -W $page`
+page_file=`man -w $page`
 
 if [[ $? != 0 ]]; then
 	exit 1
@@ -127,7 +127,7 @@ if [[ "$viewer" != "t" ]]; then
 	mkdir -p "$cache_folder"
 
 	# build a name for this specific cached file;
-	# the cache folder's name contains the manx version, and the cached file's name contains the OS X version,
+	# the cache folder's name contains the manx version, and the cached file's name contains the macOS version,
 	# so that if either changes, a previously-cached (and maybe now outdated) file will be ignored
 	cache_file="$cache_folder/$page-$(sw_vers -productVersion).$ext"
 
