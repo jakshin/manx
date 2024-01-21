@@ -26,10 +26,31 @@ function display_usage() {
 	echo
 	echo "Options:"
 	echo "    -h, --help      Show this usage information and exit"
-	echo "    -b, --browser   Open man-page in your default browser (man2html required)"
+	echo "    -b, --browser   Open man-page in your default browser"
 	echo "    -e, --editor    Open man-page in your default text editor"
 	echo "    -p, --preview   Open man-page in Preview"
 	echo "    -t, --terminal  Open man-page in Terminal's man-page viewer (default)"
+}
+
+function find_self() {
+	local target cmd="$0"
+	[[ $cmd == /* ]] || cmd="$(pwd)/$cmd"
+
+	while [[ -L $cmd ]]; do
+		if ! target="$(readlink -- "$cmd")"; then
+			# We've resolved all symlinks
+			break
+		elif [[ $target != /* ]]; then
+			# Relative symlink
+			cmd="$(dirname -- "$cmd")/$target"
+		else
+			cmd="$target"
+		fi
+	done
+
+	# set global variables
+	self_dir="$(cd -- "$(dirname -- "$cmd")" && pwd)"
+	self="$self_dir/$(basename -- "$cmd")"
 }
 
 # --- Get arguments from the MANX_OPTS environment variable & command line ---
@@ -113,7 +134,7 @@ fi
 
 # if the requested man page doesn't exist, this will display a "No manual entry" error on stderr,
 # and exit with a non-zero status
-if ! man -w "$page" > /dev/null; then
+if ! page_file="$(man -w "$page")" > /dev/null; then
 	exit 1
 fi
 
@@ -141,17 +162,21 @@ fi
 # --- Open the requested man page, in the requested viewer ---
 
 if [[ "$viewer" == "b" ]]; then
-	# convert the man page to HTML, and open it in the default web browser
+	# convert the man page to HTML using mandoc, and open it in the default web browser;
+	# we could also use man2html and/or pandoc, if they're installed, or something like this:
+	# man "$page" | col -b | textutil -stdin -convert html -title "$page" -fontsize 14pt
 	if [[ ! -f "$cache_file" ]]; then
-		man2html="$(which man2html)"
-	
-		if [[ "$man2html" == "" ]]; then
-			echo "Error: man2html must be installed to view man pages in a browser."
-			echo "It's available from MacPorts."
-			exit 1
+		mandoc -T html -O toc,style=styles.css "$page_file" > "$cache_file"
+	fi
+
+	style_file="$cache_folder/styles.css"
+	if [[ ! -e "$style_file" ]]; then
+		if [[ -L "$style_file" ]]; then
+			rm "$style_file"
 		fi
 
-		man "$page" | man2html -title "Manual page for: $page" > "$cache_file"
+		find_self
+		cp "$self_dir/styles.css" "$style_file"
 	fi
 
 	open "$cache_file"

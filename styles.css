@@ -1,0 +1,103 @@
+/* styles for rendering man pages as HTML using mandoc */
+
+/* mandoc's defaults, when the 'style' option isn't used */
+table.head, table.foot { width: 100%; }
+td.head-rtitle, td.foot-os { text-align: right; }
+td.head-vol { text-align: center; }
+.Nd, .Bf, .Op { display: inline; }
+.Pa, .Ad { font-style: italic; }
+.Ms { font-weight: bold; }
+.Bl-diag > dt { font-weight: bold; }
+code.Nm, .Fl, .Cm, .Ic, code.In, .Fd, .Fn, .Cd { font-weight: bold; font-family: inherit; }
+
+/* our style overrides */
+body {
+	font-family: Georgia, serif;
+	margin: 0;
+}
+
+body > div.manual-text {
+	margin-left: 10px;
+	margin-right: 10px;
+	max-width: 900px;
+}
+
+a {
+	color: #6DA8BA;
+}
+
+a.permalink, code.Cm {
+	color: #799661;
+	cursor: default;
+	text-decoration: none;
+}
+
+code.Li {
+	font-size: 1.1em;
+}
+
+dt {
+	margin-top: 0.5rem;
+}
+
+h1, h2, h3, h1 > a.permalink {
+	color: #7697B9;
+	font-family: Lucida Grande, sans-serif;
+}
+
+h1 {
+	border-bottom: 1px solid #eee;
+	font-size: 1.3rem;
+	padding-top: 20px;
+}
+
+h2 {
+	font-size: 1.2rem;
+}
+
+h3 {
+	font-size: 1.1rem;
+}
+	
+pre > br {
+	/*
+	make preformatted code blocks in man2html's man page render a little better
+	(still not ideal, there's a blank line between each code line, but at least only one)
+	*/
+	display: none;
+}
+
+section > :not(h1, h2, h3) {
+	padding-left: 40px;
+}
+
+table.head {
+	background-color: #f5f5f5;
+	border-bottom: 1px solid #ddd;
+	color: gray;
+	padding: 5px;
+}
+
+table.foot {
+	background-color: #f5f5f5;
+	border-top: 1px solid #ddd;
+	color: gray;
+	padding: 5px;
+}
+
+@media (prefers-color-scheme: dark) {
+	body {
+		background-color: #292E38;
+		color: #B3B9C6;
+	}
+
+	h1 {
+		border-color: #444A58;
+	}
+
+	table.head, table.foot {
+		background-color: #343A48;
+		border-color: #444A58;
+		color: inherit;
+	}
+}
