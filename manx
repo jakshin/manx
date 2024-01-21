@@ -17,8 +17,6 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111.
 # More details can be found at http://www.gnu.org/licenses/licenses.html.
 
-version=2
-
 function display_usage() {
 	self="$(basename "$0")"
 
@@ -138,25 +136,26 @@ if ! page_file="$(man -w "$page")" > /dev/null; then
 	exit 1
 fi
 
-# --- Initialize our cache folder, where formatted output files will be stored ---
+# --- Maintain our cache folder, where formatted output files will be stored ---
 
 cache_root=~/Library/Caches/manx
-cache_folder="$cache_root/v$version"
+cache_folder="$cache_root/$(sw_vers -productVersion)"
+cache_file="$cache_folder/$page.$ext"
 
 if [[ "$viewer" != "t" ]]; then
-	# create the cache folder, if needed
 	mkdir -p "$cache_folder"
 
-	# build a name for this specific cached file;
-	# the cache folder's name contains the manx version, and the cached file's name contains the macOS version,
-	# so that if either changes, a previously-cached (and maybe now outdated) file will be ignored
-	cache_file="$cache_folder/$page-$(sw_vers -productVersion).$ext"
+	# if our cache file already exists, ensure it's fresh
+	if [[ -e "$cache_file" ]]; then
+		find_self
+		if [[ "$cache_file" -ot "$page_file" || "$cache_file" -ot "$self" ]]; then
+			rm -f "$cache_file"
+		fi
+	fi
 
-	# delete any other cached files which are over 30 days old, to avoid unbounded cache growth
-	find "$cache_folder" -type f -mtime +30d -not -path "$cache_file" -print0 | xargs -0 rm
-
-	# if any old cache folders exist, remove them
-	find "$cache_root" -type d -depth 1 -not -path "$cache_folder" -print0 | xargs -0 rm -rf
+	# delete any cached files over 30 days old, then any empty directories
+	find "$cache_root" -type f -mtime +30d -print0 | xargs -0 rm
+	find "$cache_root" -depth -type d -not -path "$cache_root" -not -path "$cache_folder" -empty -exec /bin/bash -c "rmdir {} > /dev/null" \;
 fi
 
 # --- Open the requested man page, in the requested viewer ---
@@ -170,12 +169,16 @@ if [[ "$viewer" == "b" ]]; then
 	fi
 
 	style_file="$cache_folder/styles.css"
+
 	if [[ ! -e "$style_file" ]]; then
 		if [[ -L "$style_file" ]]; then
 			rm "$style_file"
 		fi
 
-		find_self
+		if [[ -z "$self_dir" ]]; then
+			find_self
+		fi
+
 		cp "$self_dir/styles.css" "$style_file"
 	fi
 
