@@ -28,7 +28,7 @@ function display_usage() {
 	echo "    -h, --help      Show this usage information and exit"
 	echo "    -b, --browser   Open man-page in your default browser"
 	echo "    -e, --editor    Open man-page in your default text editor"
-	echo "    -p, --preview   Open man-page in Preview"
+	echo "    -p, --preview   Open man-page in your default PDF viewer"
 	echo "    -t, --terminal  Open man-page in Terminal's man-page viewer (default)"
 }
 
@@ -181,6 +181,15 @@ if [[ "$viewer" == "b" ]]; then
 
 	open "$cache_file"
 
+elif [[ "$viewer" == "p" ]]; then
+	# convert the man page to to PDF using mandoc, and open it in the default PDF viewer;
+	# we could also use ghostscript or Homebrew's groff, if they're installed
+	if [[ ! -f "$cache_file" ]]; then
+		mandoc -T pdf "$page_file" > "$cache_file"
+	fi
+
+	open "$cache_file"
+
 elif [[ "$viewer" == "e" ]]; then
 	# convert the man page to text, and open it in the default text editor
 	if [[ ! -f "$cache_file" ]]; then
@@ -188,16 +197,6 @@ elif [[ "$viewer" == "e" ]]; then
 	fi
 
 	open "$cache_file"
-
-elif [[ "$viewer" == "p" ]]; then
-	# convert the man page to to PostScript, then PDF, and open it in Preview;
-	# Preview will open PostScript files directly, but always seems to scroll down a bit,
-	# which is annoying, and it doesn't do so with PDFs (version "8.0 (859)" on 10.10.1)
-	if [[ ! -f "$cache_file" ]]; then
-		man -t "$page" | pstopdf -i -o "$cache_file"
-	fi
-
-	open -a Preview.app "$cache_file"
 
 elif [[ "$viewer" == "t" ]]; then
 	# open the man page in Terminal's man-page viewer
