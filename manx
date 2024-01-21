@@ -22,13 +22,16 @@ function usage() {
 
 	local err_msg="$1"
 	if [[ -n "$err_msg" ]]; then
-		echo -e "Error: $err_msg\n"
+		echo -e "${red}Error: $err_msg${plain}\n"
+	else
+		echo -e "${bright}Manx -- view man pages better on macOS${plain}\n"
 	fi
 
-	echo "Usage: $self [options] man-page"
-	echo "       $self --clear-cache"
+	echo -e "${bright}Usage:${plain}"
+	echo "  $self [options] man-page"
+	echo "  $self --clear-cache"
 	echo
-	echo "Options:"
+	echo -e "${bright}Options:${plain}"
 	echo "  -h, --help      Show this usage information and exit"
 	echo "  -b, --browser   Open man-page in your default browser"
 	echo "  -e, --editor    Open man-page in your default text editor"
@@ -65,6 +68,14 @@ function find_self() {
 	self_dir="$(cd -- "$(dirname -- "$cmd")" && pwd)"
 	self="$self_dir/$(basename -- "$cmd")"
 }
+
+if [[ -z $NO_COLOR ]]; then
+	red="\033[0;1;31m"
+	bright="\033[1m"
+	plain="\033[0m"
+else
+	unset red bright plain
+fi
 
 # --- Get arguments from the MANX_OPTS environment variable & command line ---
 
