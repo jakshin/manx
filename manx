@@ -1,6 +1,6 @@
 #!/bin/bash
 # manx -- view man pages in various ways on macOS
-# Execute with no arguments, or read the display_usage function below, for usage info.
+# Execute with no arguments, or read the usage() function below, for usage info.
 
 # Copyright (c) 2015,2024 Jason Jackson
 #
@@ -17,17 +17,32 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111.
 # More details can be found at http://www.gnu.org/licenses/licenses.html.
 
-function display_usage() {
-	self="$(basename "$0")"
+function usage() {
+	self="$(basename "$0")"  # Symlink name, if launched via symlink
+
+	local err_msg="$1"
+	if [[ -n "$err_msg" ]]; then
+		echo -e "Error: $err_msg\n"
+	fi
 
 	echo "Usage: $self [options] man-page"
+	echo "       $self --clear-cache"
 	echo
 	echo "Options:"
-	echo "    -h, --help      Show this usage information and exit"
-	echo "    -b, --browser   Open man-page in your default browser"
-	echo "    -e, --editor    Open man-page in your default text editor"
-	echo "    -p, --preview   Open man-page in your default PDF viewer"
-	echo "    -t, --terminal  Open man-page in Terminal's man-page viewer (default)"
+	echo "  -h, --help      Show this usage information and exit"
+	echo "  -b, --browser   Open man-page in your default browser"
+	echo "  -e, --editor    Open man-page in your default text editor"
+	echo "  -p, --preview   Open man-page in your default PDF viewer"
+	echo "  -t, --terminal  Open man-page in Terminal's man-page viewer (default)"
+	echo "  --clear-cache   Remove cached generated HTML/PDF/text files"
+	echo
+	echo "You may use the --clear-cache option with or without viewing a man page"
+
+	if [[ -n "$err_msg" ]]; then
+		exit 1
+	else
+		exit 0
+	fi
 }
 
 function find_self() {
@@ -56,8 +71,11 @@ function find_self() {
 viewer=t  # t means terminal
 ext=
 page=
+clear_cache=false
 
 function parse_args() {
+	local arg
+
 	for arg in "$@"; do
 		if [[ "$arg" == "" ]]; then
 			continue
@@ -70,8 +88,7 @@ function parse_args() {
 				else
 					# request for help on command line;
 					# display usage info, and exit without any further action
-					display_usage
-					exit 0
+					usage
 				fi
 			elif [[ "$arg" == "-b" || "$arg" == "--browser" ]]; then
 				viewer=b
@@ -85,18 +102,16 @@ function parse_args() {
 			elif [[ "$arg" == "-t" || "$arg" == "--terminal" ]]; then
 				viewer=t
 				ext=
+			elif [[ "$arg" == "--clear-cache" ]]; then
+				clear_cache=true
 			else
 				# unrecognized option
+				local source=""
 				if [[ $parsing_from_env == 1 ]]; then
-					source="in the MANX_OPTS environment variable"
-				else
-					source="on command line"
+					source=" in the MANX_OPTS environment variable"
 				fi
 
-				echo "Error: Invalid option \"$arg\" $source"
-				echo
-				display_usage
-				exit 1
+				usage "Invalid option \"$arg\"$source"
 			fi
 		else
 			if [[ $parsing_from_env == 1 ]]; then
@@ -104,10 +119,7 @@ function parse_args() {
 				continue	
 			elif [[ "$page" != "" ]]; then
 				# page was already specified in a previous argument
-				echo "Error: man page specified more than once (\"$page\" then \"$arg\")"
-				echo
-				display_usage
-				exit 1
+				usage "You can only view one man page at a time (\"$page\" then \"$arg\")"
 			else
 				page="$arg"
 			fi
@@ -123,17 +135,18 @@ parse_args "${opts[@]}"
 parsing_from_env=0
 parse_args "$@"
 
-if [[ "$page" == "" ]]; then
-	display_usage
-	exit 1
+if [[ "$page" == "" && $clear_cache == false ]]; then
+	usage
 fi
 
 # --- Test to see whether the request man page exists
 
 # if the requested man page doesn't exist, this will display a "No manual entry" error on stderr,
 # and exit with a non-zero status
-if ! page_file="$(man -w "$page")" > /dev/null; then
-	exit 1
+if [[ "$page" != "" ]]; then
+	if ! page_file="$(man -w "$page")" > /dev/null; then
+		exit 1
+	fi
 fi
 
 # --- Maintain our cache folder, where formatted output files will be stored ---
@@ -142,7 +155,12 @@ cache_root=~/Library/Caches/manx
 cache_folder="$cache_root/$(sw_vers -productVersion)"
 cache_file="$cache_folder/$page.$ext"
 
-if [[ "$viewer" != "t" ]]; then
+if [[ $clear_cache == true ]]; then
+	mkdir -p "$cache_folder"
+	echo "Clearing cache in $cache_root"
+	rm -rf "${cache_root:?}"/*
+
+elif [[ "$viewer" != "t" ]]; then
 	mkdir -p "$cache_folder"
 
 	# if our cache file already exists, ensure it's fresh
@@ -159,6 +177,10 @@ if [[ "$viewer" != "t" ]]; then
 fi
 
 # --- Open the requested man page, in the requested viewer ---
+
+if [[ "$page" == "" ]]; then
+	exit 0
+fi
 
 if [[ "$viewer" == "b" ]]; then
 	# convert the man page to HTML using mandoc, and open it in the default web browser;
