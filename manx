@@ -293,11 +293,29 @@ elif [[ "$ext" == "html" ]]; then
 
 	style_file="$cache_folder/styles.css"
 	if [[ ! -f "$style_file" ]]; then
-		if [[ -z "$self_dir" ]]; then
-			find_self
-		fi
-
-		cp "$self_dir/styles.css" "$style_file"
+		# styles.css encoded as base64, so it can easily be bundled into this script
+		styles="Lyogc3R5bGVzIGZvciByZW5kZXJpbmcgbWFuIHBhZ2VzIGFzIEhUTUwgdXNpbmcgbWFuZG9jICovCgovKiBtYW5kb2MncyBkZWZhdWx0cywgd2hl
+				biB0aGUgJ3N0eWxlJyBvcHRpb24gaXNuJ3QgdXNlZCAqLwp0YWJsZS5oZWFkLCB0YWJsZS5mb290IHsgd2lkdGg6IDEwMCU7IH0KdGQuaGVhZC1y
+				dGl0bGUsIHRkLmZvb3Qtb3MgeyB0ZXh0LWFsaWduOiByaWdodDsgfQp0ZC5oZWFkLXZvbCB7IHRleHQtYWxpZ246IGNlbnRlcjsgfQouTmQsIC5C
+				ZiwgLk9wIHsgZGlzcGxheTogaW5saW5lOyB9Ci5QYSwgLkFkIHsgZm9udC1zdHlsZTogaXRhbGljOyB9Ci5NcyB7IGZvbnQtd2VpZ2h0OiBib2xk
+				OyB9Ci5CbC1kaWFnID4gZHQgeyBmb250LXdlaWdodDogYm9sZDsgfQpjb2RlLk5tLCAuRmwsIC5DbSwgLkljLCBjb2RlLkluLCAuRmQsIC5Gbiwg
+				LkNkIHsgZm9udC13ZWlnaHQ6IGJvbGQ7IGZvbnQtZmFtaWx5OiBpbmhlcml0OyB9CgovKiBvdXIgc3R5bGUgb3ZlcnJpZGVzICovCmJvZHkgewoJ
+				Zm9udC1mYW1pbHk6IEdlb3JnaWEsIHNlcmlmOwoJbWFyZ2luOiAwOwp9Cgpib2R5ID4gZGl2Lm1hbnVhbC10ZXh0IHsKCW1hcmdpbi1sZWZ0OiAx
+				MHB4OwoJbWFyZ2luLXJpZ2h0OiAxMHB4OwoJbWF4LXdpZHRoOiA5MDBweDsKfQoKYSB7Cgljb2xvcjogIzZEQThCQTsKfQoKYS5wZXJtYWxpbmss
+				IGNvZGUuQ20gewoJY29sb3I6ICM3OTk2NjE7CgljdXJzb3I6IGRlZmF1bHQ7Cgl0ZXh0LWRlY29yYXRpb246IG5vbmU7Cn0KCmNvZGUuTGkgewoJ
+				Zm9udC1zaXplOiAxLjFlbTsKfQoKZHQgewoJbWFyZ2luLXRvcDogMC41cmVtOwp9CgpoMSwgaDIsIGgzLCBoMSA+IGEucGVybWFsaW5rIHsKCWNv
+				bG9yOiAjNzY5N0I5OwoJZm9udC1mYW1pbHk6IEx1Y2lkYSBHcmFuZGUsIHNhbnMtc2VyaWY7Cn0KCmgxIHsKCWJvcmRlci1ib3R0b206IDFweCBz
+				b2xpZCAjZWVlOwoJZm9udC1zaXplOiAxLjNyZW07CglwYWRkaW5nLXRvcDogMjBweDsKfQoKaDIgewoJZm9udC1zaXplOiAxLjJyZW07Cn0KCmgz
+				IHsKCWZvbnQtc2l6ZTogMS4xcmVtOwp9CgkKcHJlID4gYnIgewoJLyoKCW1ha2UgcHJlZm9ybWF0dGVkIGNvZGUgYmxvY2tzIGluIG1hbjJodG1s
+				J3MgbWFuIHBhZ2UgcmVuZGVyIGEgbGl0dGxlIGJldHRlcgoJKHN0aWxsIG5vdCBpZGVhbCwgdGhlcmUncyBhIGJsYW5rIGxpbmUgYmV0d2VlbiBl
+				YWNoIGNvZGUgbGluZSwgYnV0IGF0IGxlYXN0IG9ubHkgb25lKQoJKi8KCWRpc3BsYXk6IG5vbmU7Cn0KCnNlY3Rpb24gPiA6bm90KGgxLCBoMiwg
+				aDMpIHsKCXBhZGRpbmctbGVmdDogNDBweDsKfQoKdGFibGUuaGVhZCB7CgliYWNrZ3JvdW5kLWNvbG9yOiAjZjVmNWY1OwoJYm9yZGVyLWJvdHRv
+				bTogMXB4IHNvbGlkICNkZGQ7Cgljb2xvcjogZ3JheTsKCXBhZGRpbmc6IDVweDsKfQoKdGFibGUuZm9vdCB7CgliYWNrZ3JvdW5kLWNvbG9yOiAj
+				ZjVmNWY1OwoJYm9yZGVyLXRvcDogMXB4IHNvbGlkICNkZGQ7Cgljb2xvcjogZ3JheTsKCXBhZGRpbmc6IDVweDsKfQoKQG1lZGlhIChwcmVmZXJz
+				LWNvbG9yLXNjaGVtZTogZGFyaykgewoJYm9keSB7CgkJYmFja2dyb3VuZC1jb2xvcjogIzI5MkUzODsKCQljb2xvcjogI0IzQjlDNjsKCX0KCglo
+				MSB7CgkJYm9yZGVyLWNvbG9yOiAjNDQ0QTU4OwoJfQoKCXRhYmxlLmhlYWQsIHRhYmxlLmZvb3QgewoJCWJhY2tncm91bmQtY29sb3I6ICMzNDNB
+				NDg7CgkJYm9yZGVyLWNvbG9yOiAjNDQ0QTU4OwoJCWNvbG9yOiBpbmhlcml0OwoJfQp9Cg=="
+		echo "$styles" | base64 --decode -o "$style_file"
 	fi
 
 	ext_type="public.html"
