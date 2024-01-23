@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 # manx -- view man pages in various ways on macOS
 # Copyright (c) 2015,2024 Jason Jackson
 #
