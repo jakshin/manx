@@ -21,7 +21,8 @@ function usage() {
 
 	local err_msg="$1"
 	if [[ -n $err_msg ]]; then
-		echo -e "${red}Error: ${err_msg}${plain}\n"
+		echo -e "${red}Error: ${err_msg}${plain}" 1>&2
+		echo
 	else
 		echo -e "${bright}Manx -- view man pages better on macOS${plain}\n"
 	fi
@@ -30,49 +31,58 @@ function usage() {
 	echo -e "Usage:${b} ${script} ${p}[${smul}options${rmul}] ${smul}man-page${rmul}"
 	echo -e "      ${b} ${script} --clear-cache ${p}"
 	echo
-	echo -e "Options can be given before or after the man page's name:"
-	echo
-	echo -e "  ${b}-d${p}, ${b}--direct${p}"
-	echo -e "    Open the man page directly in your terminal window like usual,"
-	echo -e "    but with fancy colors to make it easier and more enjoyable to read."
-	echo -e "    This is the default if no options are given on the command line"
-	echo -e "    or in the ${b}\$MANX_OPTIONS${p} environment variable."
-	echo
-	echo -e "  ${b}-h${p}, ${b}--html${p}, ${b}--browser${p}, ${b}--browser=${p}${smul}AppName${rmul}"
-	echo -e "    Format the man page as HTML, and open it in your default browser"
-	echo -e "    (or whichever app you have configured to open HTML files by default),"
-	echo -e "    or the app you pass with the ${b}--browser${p} option."
-	echo
-	echo -e "  ${b}-p${p}, ${b}--pdf${p}, ${b}--viewer=${p}${smul}AppName${rmul}"
-	echo -e "    Format the man page as PDF, and open it in your default PDF viewer,"
-	echo -e "    or the app you pass with the ${b}--viewer${p} option."
-	echo
-	echo -e "  ${b}-t${p}, ${b}--text${p}, ${b}--editor${p}, ${b}--editor=${p}${smul}AppName${rmul}"
-	echo -e "    Format the man page as plain text, and open it in your default editor,"
-	echo -e "    or the app you pass with the ${b}--editor${p} option."
-	echo
-	echo -e "  ${b}-x${p}, ${b}--x-man-page${p}"
-	echo -e "    Open the man page using macOS's ${b}x-man-page${p} URL scheme,"
-	echo -e "    i.e. in a Terminal window with special formatting and colors."
-	echo
-	echo -e "  ${b}-M${p} ${smul}manpath${rmul}, ${b}--manpath=${p}${smul}manpath${rmul}"
-	echo -e "    Just like man's ${b}-M${p} option: a colon-separated list of directories"
-	echo -e "    to search for man pages, instead of the default. Overrides ${b}\$MANPATH${p}."
-	echo -e "    Also see ${b}manpath(1)${p}."
-	echo
-	echo -e "  ${b}-S${p} ${smul}section(s)${rmul}, ${b}--section=${p}${smul}section${rmul},"\
-				"${b}--sections=${p}${smul}sections${rmul}"
-	echo -e "    Just like man's ${b}-S${p} option: a manual section, or colon-separated list"
-	echo -e "    of sections to search, instead of the default. Overrides ${b}\$MANSECT${p}."
-	echo
-	echo -e "  ${b}--clear-cache${p}"
-	echo -e "    Remove cached generated HTML/PDF/text files. You may use this option"
-	echo -e "    with or without viewing a man page.\n"
+
+	if [[ -n $err_msg ]]; then
+		local more=""
+		if man -w "${script}" &> /dev/null; then
+			more=", \"${b}${script} ${script}${p}\" or \"${b}man ${script}${p}\""
+		fi
+
+		echo -e "For usage details, run \"${b}${script} --help${p}\"${more}"
+	else
+		echo -e "Options can be given before or after the man page's name:"
+		echo
+		echo -e "  ${b}-d${p}, ${b}--direct${p}"
+		echo -e "    Open the man page directly in your terminal window like usual,"
+		echo -e "    but with fancy colors to make it easier and more enjoyable to read."
+		echo -e "    This is the default if no options are given on the command line"
+		echo -e "    or in the ${b}\$MANX_OPTIONS${p} environment variable."
+		echo
+		echo -e "  ${b}-h${p}, ${b}--html${p}, ${b}--browser${p}, ${b}--browser=${p}${smul}AppName${rmul}"
+		echo -e "    Format the man page as HTML, and open it in your default browser"
+		echo -e "    (or whichever app you have configured to open HTML files by default),"
+		echo -e "    or the app you pass with the ${b}--browser${p} option."
+		echo
+		echo -e "  ${b}-p${p}, ${b}--pdf${p}, ${b}--viewer=${p}${smul}AppName${rmul}"
+		echo -e "    Format the man page as PDF, and open it in your default PDF viewer,"
+		echo -e "    or the app you pass with the ${b}--viewer${p} option."
+		echo
+		echo -e "  ${b}-t${p}, ${b}--text${p}, ${b}--editor${p}, ${b}--editor=${p}${smul}AppName${rmul}"
+		echo -e "    Format the man page as plain text, and open it in your default editor,"
+		echo -e "    or the app you pass with the ${b}--editor${p} option."
+		echo
+		echo -e "  ${b}-x${p}, ${b}--x-man-page${p}"
+		echo -e "    Open the man page using macOS's ${b}x-man-page${p} URL scheme,"
+		echo -e "    i.e. in a Terminal window with special formatting and colors."
+		echo
+		echo -e "  ${b}-M${p} ${smul}manpath${rmul}, ${b}--manpath=${p}${smul}manpath${rmul}"
+		echo -e "    Just like man's ${b}-M${p} option: a colon-separated list of directories"
+		echo -e "    to search for man pages, instead of the default. Overrides ${b}\$MANPATH${p}."
+		echo -e "    Also see ${b}manpath(1)${p}."
+		echo
+		echo -e "  ${b}-S${p} ${smul}section(s)${rmul}, ${b}--section=${p}${smul}section${rmul},"\
+					"${b}--sections=${p}${smul}sections${rmul}"
+		echo -e "    Just like man's ${b}-S${p} option: a manual section, or colon-separated list"
+		echo -e "    of sections to search, instead of the default. Overrides ${b}\$MANSECT${p}."
+		echo
+		echo -e "  ${b}--clear-cache${p}"
+		echo -e "    Remove cached generated HTML/PDF/text files. You may use this option"
+		echo -e "    with or without viewing a man page."
+	fi
 
 	if [[ -n $MANX_OPTIONS ]]; then
+		echo
 		echo -e "The ${b}\$MANX_OPTIONS${p} environment variable is set: $MANX_OPTIONS"
-	else
-		echo -e "The ${b}\$MANX_OPTIONS${p} environment variable is empty."
 	fi
 
 	if [[ -n $err_msg ]]; then
