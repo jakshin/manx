@@ -55,6 +55,16 @@ function usage() {
 	echo -e "    Open the man page using macOS's ${b}x-man-page${p} URL scheme,"
 	echo -e "    i.e. in a Terminal window with special formatting and colors."
 	echo
+	echo -e "  ${b}-M${p} ${smul}manpath${rmul}, ${b}--manpath=${p}${smul}manpath${rmul}"
+	echo -e "    Just like man's ${b}-M${p} option: a colon-separated list of directories"
+	echo -e "    to search for man pages, instead of the default. Overrides ${b}\$MANPATH${p}."
+	echo -e "    Also see ${b}manpath(1)${p}."
+	echo
+	echo -e "  ${b}-S${p} ${smul}section(s)${rmul}, ${b}--section=${p}${smul}section${rmul},"\
+				"${b}--sections=${p}${smul}sections${rmul}"
+	echo -e "    Just like man's ${b}-S${p} option: a manual section, or colon-separated list"
+	echo -e "    of sections to search, instead of the default. Overrides ${b}\$MANSECT${p}."
+	echo
 	echo -e "  ${b}--clear-cache${p}"
 	echo -e "    Remove cached generated HTML/PDF/text files. You may use this option"
 	echo -e "    with or without viewing a man page.\n"
@@ -112,12 +122,25 @@ ext=""   # the extension/type of our generated file (n/a for x-man-page)
 page=""  # the man page to view, e.g. "ls"
 clear_cache=false
 
-function parse_args() {
-	local arg
+man_path=""
+man_sections=""
+man_sections_opt="-S"
 
+function parse_args() {
+	local in_environment_variable=""
+	if [[ $parsing_from_env == 1 ]]; then
+		in_environment_variable=' in the $MANX_OPTIONS environment variable'
+	fi
+
+	local arg
 	for arg in "$@"; do
 		if [[ "$arg" == "" ]]; then
 			continue
+
+		elif [[ "$man_path" == "@" ]]; then
+			man_path="$arg"
+		elif [[ "$man_sections" == "@" ]]; then
+			man_sections="$arg"
 
 		elif [[ "$arg" == -* ]]; then
 			if [[ "$arg" == "--help" ]]; then
@@ -153,16 +176,27 @@ function parse_args() {
 			elif [[ "$arg" == "-x" || "$arg" == "--x-man-page" ]]; then
 				viewer="x-man-page"
 				ext=""
+
+			elif [[ "$arg" == "-M" ]]; then
+				man_path="@"  # next arg is the path
+			elif [[ "$arg" == "-M"* ]]; then
+				man_path="${arg:2}"
+			elif [[ "$arg" == "--manpath="* ]]; then
+				man_path="${arg/*=}"
+
+			elif [[ "$arg" == "-S" ]]; then
+				man_sections="@"  # next arg is the section/list
+			elif [[ "$arg" == "-S"* ]]; then
+				man_sections="${arg:2}"
+			elif [[ "$arg" == "--section="* || "$arg" == "--sections="* ]]; then
+				man_sections="${arg/*=}"
+				man_sections_opt="${arg/=*}"
+
 			elif [[ "$arg" == "--clear-cache" ]]; then
 				clear_cache=true
 			else
 				# unrecognized option
-				local source=""
-				if [[ $parsing_from_env == 1 ]]; then
-					source=' in the $MANX_OPTIONS environment variable'
-				fi
-
-				usage "Invalid option \"$arg\"$source"
+				usage "Invalid option \"${arg}\"${in_environment_variable}"
 			fi
 		else
 			if [[ $parsing_from_env == 1 ]]; then
@@ -176,6 +210,44 @@ function parse_args() {
 			fi
 		fi
 	done
+
+	if [[ "$man_path" == "@" ]]; then
+		usage "Missing manual path after -M${in_environment_variable}"
+
+	elif [[ "$man_path" != "" ]]; then
+		export MANPATH="$man_path"
+	fi
+
+	if [[ "$man_sections" == "@" ]]; then
+		usage "Missing manual section/list after -S${in_environment_variable}"
+
+	elif [[ "$man_sections" != "" ]]; then
+		local sections dirs
+		IFS=":" read -ra sections <<< "$man_sections"
+		IFS=":" read -ra dirs <<< "$(manpath)"  # uses $MANPATH if set, defaults if not
+
+		local section
+		for section in "${sections[@]}"; do
+			if [[ "$section" == "" ]]; then
+				continue
+			fi
+
+			local dir
+			for dir in "${dirs[@]}"; do
+				if [[ -d "${dir}/man${section}" ]]; then
+					continue 2  # NOTE: continue the "for section" loop, not this inner loop
+				fi
+			done
+
+			if [[ $parsing_from_env == 1 ]]; then
+				usage "Invalid manual section${in_environment_variable}: ${section}"
+			else
+				usage "Invalid manual section passed with ${man_sections_opt}: ${section}"
+			fi
+		done
+
+		export MANSECT="$man_sections"
+	fi
 }
 
 parsing_from_env=1
@@ -187,7 +259,7 @@ parsing_from_env=0
 parse_args "$@"
 
 if [[ "$viewer" == "direct" ]]; then
-	cols=$(( COLUMNS < 140 ? COLUMNS : 140 ))
+	cols=$(( COLUMNS < 140 ? COLUMNS : 140 ))  # 0 if $COLUMNS isn't set
 	ext="col${cols}"
 fi
 
@@ -195,12 +267,23 @@ if [[ "$page" == "" && $clear_cache == false ]]; then
 	usage
 fi
 
-# --- Test to see whether the request man page exists
+# --- Test to see whether the request man page exists ---
 
 # if the requested man page doesn't exist, this will display a "No manual entry" error on stderr,
 # and exit with a non-zero status
 if [[ "$page" != "" ]]; then
 	if ! page_file="$(man -w "$page")" > /dev/null; then
+
+		if [[ "$man_sections" == *:* ]]; then
+			echo "In sections: $man_sections" 1>&2
+		elif [[ "$man_sections" != "" ]]; then
+			echo "In section: $man_sections" 1>&2
+		fi
+
+		if [[ "$man_path" != "" ]]; then
+			echo "Using path: $man_path" 1>&2
+		fi
+
 		exit 1
 	fi
 fi
