@@ -20,8 +20,8 @@ function usage() {
 	script="$(basename "$0")"  # Symlink name, if launched via symlink
 
 	local err_msg="$1"
-	if [[ -n "$err_msg" ]]; then
-		echo -e "${red}Error: $err_msg${plain}\n"
+	if [[ -n $err_msg ]]; then
+		echo -e "${red}Error: ${err_msg}${plain}\n"
 	else
 		echo -e "${bright}Manx -- view man pages better on macOS${plain}\n"
 	fi
@@ -69,13 +69,13 @@ function usage() {
 	echo -e "    Remove cached generated HTML/PDF/text files. You may use this option"
 	echo -e "    with or without viewing a man page.\n"
 
-	if [[ "$MANX_OPTIONS" != "" ]]; then
+	if [[ -n $MANX_OPTIONS ]]; then
 		echo -e "The ${b}\$MANX_OPTIONS${p} environment variable is set: $MANX_OPTIONS"
 	else
 		echo -e "The ${b}\$MANX_OPTIONS${p} environment variable is empty."
 	fi
 
-	if [[ -n "$err_msg" ]]; then
+	if [[ -n $err_msg ]]; then
 		exit 1
 	else
 		exit 0
@@ -94,7 +94,7 @@ function find_self() {
 			# Relative symlink
 			cmd="$(dirname -- "$cmd")/$target"
 		else
-			cmd="$target"
+			cmd=$target
 		fi
 	done
 
@@ -117,7 +117,7 @@ rmul="$(tput rmul)"  # escape sequence to stop underlining
 
 # --- Get arguments from the $MANX_OPTIONS environment variable & command line ---
 
-viewer="direct"
+viewer=direct
 ext=""   # the extension/type of our generated file (n/a for x-man-page)
 page=""  # the man page to view, e.g. "ls"
 clear_cache=false
@@ -128,23 +128,23 @@ man_sections_opt="-S"
 
 function parse_args() {
 	local in_environment_variable=""
-	if [[ $parsing_from_env == 1 ]]; then
+	if [[ $parsing_from_env == true ]]; then
 		in_environment_variable=' in the $MANX_OPTIONS environment variable'
 	fi
 
 	local arg
 	for arg in "$@"; do
-		if [[ "$arg" == "" ]]; then
+		if [[ -z $arg ]]; then
 			continue
 
-		elif [[ "$man_path" == "@" ]]; then
-			man_path="$arg"
-		elif [[ "$man_sections" == "@" ]]; then
-			man_sections="$arg"
+		elif [[ $man_path == "@" ]]; then
+			man_path=$arg
+		elif [[ $man_sections == "@" ]]; then
+			man_sections=$arg
 
-		elif [[ "$arg" == -* ]]; then
-			if [[ "$arg" == "--help" ]]; then
-				if [[ $parsing_from_env == 1 ]]; then
+		elif [[ $arg == -* ]]; then
+			if [[ $arg == "--help" ]]; then
+				if [[ $parsing_from_env == true ]]; then
 					# request for help in $MANX_OPTIONS; ignore it
 					continue
 				else
@@ -152,83 +152,83 @@ function parse_args() {
 					# display usage info, and exit without any further action
 					usage
 				fi
-			elif [[ "$arg" == "-d" || "$arg" == "--direct" ]]; then
-				viewer="direct"
+			elif [[ $arg == "-d" || $arg == "--direct" ]]; then
+				viewer=direct
 				ext=""  # we'll set this below
-			elif [[ "$arg" == "-h" || "$arg" == "--html" || "$arg" == "--browser" ]]; then
+			elif [[ $arg == "-h" || $arg == "--html" || $arg == "--browser" ]]; then
 				viewer=""
 				ext=html
-			elif [[ "$arg" == --browser=* ]]; then
-				viewer="${arg/*=}"
+			elif [[ $arg == "--browser="* ]]; then
+				viewer=${arg/*=}
 				ext=html
-			elif [[ "$arg" == "-p" || "$arg" == "--pdf" ]]; then
+			elif [[ $arg == "-p" || $arg == "--pdf" ]]; then
 				viewer=""
 				ext=pdf
-			elif [[ "$arg" == --viewer=* ]]; then
-				viewer="${arg/*=}"
+			elif [[ $arg == "--viewer="* ]]; then
+				viewer=${arg/*=}
 				ext=pdf
-			elif [[ "$arg" == "-t" || "$arg" == "--text" || "$arg" == "--editor" ]]; then
+			elif [[ $arg == "-t" || $arg == "--text" || $arg == "--editor" ]]; then
 				viewer=""
 				ext=txt
-			elif [[ "$arg" == --editor=* ]]; then
-				viewer="${arg/*=}"
+			elif [[ $arg == "--editor="* ]]; then
+				viewer=${arg/*=}
 				ext=txt
-			elif [[ "$arg" == "-x" || "$arg" == "--x-man-page" ]]; then
-				viewer="x-man-page"
+			elif [[ $arg == "-x" || $arg == "--x-man-page" ]]; then
+				viewer=x-man-page
 				ext=""
 
-			elif [[ "$arg" == "-M" ]]; then
-				man_path="@"  # next arg is the path
-			elif [[ "$arg" == "-M"* ]]; then
-				man_path="${arg:2}"
-			elif [[ "$arg" == "--manpath="* ]]; then
-				man_path="${arg/*=}"
+			elif [[ $arg == "-M" ]]; then
+				man_path=@  # next arg is the path
+			elif [[ $arg == "-M"* ]]; then
+				man_path=${arg:2}
+			elif [[ $arg == "--manpath="* ]]; then
+				man_path=${arg/*=}
 
-			elif [[ "$arg" == "-S" ]]; then
-				man_sections="@"  # next arg is the section/list
-			elif [[ "$arg" == "-S"* ]]; then
-				man_sections="${arg:2}"
-			elif [[ "$arg" == "--section="* || "$arg" == "--sections="* ]]; then
-				man_sections="${arg/*=}"
-				man_sections_opt="${arg/=*}"
+			elif [[ $arg == "-S" ]]; then
+				man_sections=@  # next arg is the section/list
+			elif [[ $arg == "-S"* ]]; then
+				man_sections=${arg:2}
+			elif [[ $arg == "--section="* || $arg == "--sections="* ]]; then
+				man_sections=${arg/*=}
+				man_sections_opt=${arg/=*}
 
-			elif [[ "$arg" == "--clear-cache" ]]; then
+			elif [[ $arg == "--clear-cache" ]]; then
 				clear_cache=true
 			else
 				# unrecognized option
 				usage "Invalid option \"${arg}\"${in_environment_variable}"
 			fi
 		else
-			if [[ $parsing_from_env == 1 ]]; then
+			if [[ $parsing_from_env == true ]]; then
 				# non-option given in $MANX_OPTIONS; ignore it
 				continue
-			elif [[ "$page" != "" ]]; then
+			elif [[ -n $page ]]; then
 				# page was already specified in a previous argument
 				usage "You can only view one man page at a time (\"$page\" then \"$arg\")"
 			else
-				page="$arg"
+				page=$arg
 			fi
 		fi
 	done
 
-	if [[ "$man_path" == "@" ]]; then
+	if [[ $man_path == "@" ]]; then
 		usage "Missing manual path after -M${in_environment_variable}"
 
-	elif [[ "$man_path" != "" ]]; then
-		export MANPATH="$man_path"
+	elif [[ -n $man_path ]]; then
+		export MANPATH=$man_path
 	fi
 
-	if [[ "$man_sections" == "@" ]]; then
+	if [[ $man_sections == "@" ]]; then
 		usage "Missing manual section/list after -S${in_environment_variable}"
 
-	elif [[ "$man_sections" != "" ]]; then
+	elif [[ -n $man_sections ]]; then
 		local sections dirs
 		IFS=":" read -ra sections <<< "$man_sections"
 		IFS=":" read -ra dirs <<< "$(manpath)"  # uses $MANPATH if set, defaults if not
 
 		local section
 		for section in "${sections[@]}"; do
-			if [[ "$section" == "" ]]; then
+			if [[ -z $section ]]; then
 				continue
 			fi
 
@@ -239,31 +239,31 @@ function parse_args() {
 				fi
 			done
 
-			if [[ $parsing_from_env == 1 ]]; then
+			if [[ $parsing_from_env == true ]]; then
 				usage "Invalid manual section${in_environment_variable}: ${section}"
 			else
 				usage "Invalid manual section passed with ${man_sections_opt}: ${section}"
 			fi
 		done
 
-		export MANSECT="$man_sections"
+		export MANSECT=$man_sections
 	fi
 }
 
-parsing_from_env=1
+parsing_from_env=true
 opts=""
 read -a opts -rd '' <<< "$MANX_OPTIONS" || true
 parse_args "${opts[@]}"
 
-parsing_from_env=0
+parsing_from_env=false
 parse_args "$@"
 
-if [[ "$viewer" == "direct" ]]; then
+if [[ $viewer == "direct" ]]; then
 	cols=$(( COLUMNS < 140 ? COLUMNS : 140 ))  # 0 if $COLUMNS isn't set
 	ext="col${cols}"
 fi
 
-if [[ "$page" == "" && $clear_cache == false ]]; then
+if [[ -z $page && $clear_cache == false ]]; then
 	usage
 fi
 
@@ -271,16 +271,16 @@ fi
 
 # if the requested man page doesn't exist, this will display a "No manual entry" error on stderr,
 # and exit with a non-zero status
-if [[ "$page" != "" ]]; then
+if [[ -n $page ]]; then
 	if ! page_file="$(man -w "$page")" > /dev/null; then
 
-		if [[ "$man_sections" == *:* ]]; then
+		if [[ $man_sections == *:* ]]; then
 			echo "In sections: $man_sections" 1>&2
-		elif [[ "$man_sections" != "" ]]; then
+		elif [[ -n $man_sections ]]; then
 			echo "In section: $man_sections" 1>&2
 		fi
 
-		if [[ "$man_path" != "" ]]; then
+		if [[ -n $man_path ]]; then
 			echo "Using path: $man_path" 1>&2
 		fi
 
@@ -299,13 +299,13 @@ if [[ $clear_cache == true ]]; then
 	echo "Clearing cache in $cache_root"
 	rm -rf "${cache_root:?}"/*
 
-elif [[ "$ext" != "" ]]; then
+elif [[ -n $ext ]]; then
 	mkdir -p "$cache_folder"
 
 	# if our cache file already exists, ensure it's fresh
-	if [[ -e "$cache_file" ]]; then
+	if [[ -e $cache_file ]]; then
 		find_self
-		if [[ "$cache_file" -ot "$page_file" || "$cache_file" -ot "$self" ]]; then
+		if [[ $cache_file -ot $page_file || $cache_file -ot $self ]]; then
 			rm -f "$cache_file"
 		fi
 	fi
@@ -317,11 +317,11 @@ fi
 
 # --- Open the requested man page, in the requested viewer ---
 
-if [[ "$page" == "" ]]; then
+if [[ -z $page ]]; then
 	exit 0  # we just cleared cache, with no man page requested
 
-elif [[ "$viewer" == "direct" ]]; then
-	if [[ ! -f "$cache_file" ]]; then
+elif [[ $viewer == "direct" ]]; then
+	if [[ ! -f $cache_file ]]; then
 		export MANWIDTH=$cols
 		man "$page_file" > "$cache_file"
 
@@ -342,12 +342,12 @@ elif [[ "$viewer" == "direct" ]]; then
 	fi
 
 	IFS=" " read -ra manpager <<< "${MANPAGER:-}"  # empty array if $MANPAGER isn't set
-	if [[ "${manpager[0]}" != "less" && "${manpager[0]}" != *"/less" ]]; then
+	if [[ ${manpager[0]} != "less" && ${manpager[0]} != *"/less" ]]; then
 		manpager=(less -sR)  # matching man's default
 	else
 		found=false
 		for arg in "${manpager[@]:1}"; do
-			if [[ "$arg" == -* && "$arg" == *R* ]]; then
+			if [[ $arg == -* && $arg == *R* ]]; then
 				found=true
 				break
 			fi
@@ -361,21 +361,21 @@ elif [[ "$viewer" == "direct" ]]; then
 	"${manpager[@]}" < "$cache_file"
 	exit
 
-elif [[ "$viewer" == "x-man-page" ]]; then
+elif [[ $viewer == "x-man-page" ]]; then
 	# open the man page in Terminal's man-page viewer
 	open "x-man-page://$page"
 	exit
 
-elif [[ "$ext" == "html" ]]; then
+elif [[ $ext == "html" ]]; then
 	# convert the man page to HTML using mandoc, and open it in a web browser;
 	# we could also use man2html or pandoc, if either is installed, or something like this:
 	# man "$page" | col -b | textutil -stdin -convert html -title "$page" -fontsize 14pt
-	if [[ ! -f "$cache_file" ]]; then
+	if [[ ! -f $cache_file ]]; then
 		mandoc -T html -O toc,style=styles.css "$page_file" > "$cache_file"
 	fi
 
 	style_file="$cache_folder/styles.css"
-	if [[ ! -f "$style_file" ]]; then
+	if [[ ! -f $style_file ]]; then
 		# styles.css encoded as base64, so it can easily be bundled into this script
 		styles="Lyogc3R5bGVzIGZvciByZW5kZXJpbmcgbWFuIHBhZ2VzIGFzIEhUTUwgdXNpbmcgbWFuZG9jICovCgovKiBtYW5kb2MncyBkZWZhdWx0cywgd2hl
 				biB0aGUgJ3N0eWxlJyBvcHRpb24gaXNuJ3QgdXNlZCAqLwp0YWJsZS5oZWFkLCB0YWJsZS5mb290IHsgd2lkdGg6IDEwMCU7IH0KdGQuaGVhZC1y
@@ -401,32 +401,32 @@ elif [[ "$ext" == "html" ]]; then
 		echo "$styles" | base64 --decode -o "$style_file"
 	fi
 
-	ext_type="public.html"
-	ext_default_handler="com.apple.safari"
+	ext_type=public.html
+	ext_default_handler=com.apple.safari
 
 elif [[ "$ext" == "pdf" ]]; then
 	# convert the man page to to PDF using mandoc, and open it in a PDF viewer;
 	# we could also use ghostscript or Homebrew's groff, if either is installed
-	if [[ ! -f "$cache_file" ]]; then
+	if [[ ! -f $cache_file ]]; then
 		mandoc -T pdf "$page_file" > "$cache_file"
 	fi
 
-	ext_type="com.adobe.pdf"
-	ext_default_handler="com.apple.preview"
+	ext_type=com.adobe.pdf
+	ext_default_handler=com.apple.preview
 
-elif [[ "$ext" == "txt" ]]; then
+elif [[ $ext == "txt" ]]; then
 	# convert the man page to text, and open it in a text editor
-	if [[ ! -f "$cache_file" ]]; then
+	if [[ ! -f $cache_file ]]; then
 		man "$page" | col -b > "$cache_file"
 	fi
 fi
 
-if [[ "$viewer" == "" ]]; then
+if [[ -z $viewer ]]; then
 	# does the default viewer need a special startup-and-delay workaround to avoid jank?
 	handler="$(defaults read com.apple.LaunchServices/com.apple.launchservices.secure LSHandlers | 
 				grep -F "$ext_type" -A4 | grep -F LSHandlerRoleAll || true)"  # Result contains multiple lines
 
-	if [[ "$handler" == "" ]]; then
+	if [[ -z $handler ]]; then
 		handler=$ext_default_handler
 	fi
 else
@@ -434,28 +434,28 @@ else
 	viewer_lowercase="$(echo "$viewer" | tr '[:upper:]' '[:lower:]')"
 	handler=$viewer_lowercase
 
-	if [[ "$viewer_lowercase" == "chrome" ]]; then
+	if [[ $viewer_lowercase == "chrome" ]]; then
 		viewer="Google Chrome"
-	elif [[ "$viewer_lowercase" == "edge" ]]; then
+	elif [[ $viewer_lowercase == "edge" ]]; then
 		viewer="Microsoft Edge"
 	fi
 fi
 
-if [[ "$handler" == *"chrome"* ]]; then
+if [[ $handler == *"chrome"* ]]; then
 	viewer="Google Chrome"
 	viewer_delay=3
-elif [[ "$handler" == *"edgemac"* ]]; then
+elif [[ $handler == *"edgemac"* ]]; then
 	viewer="Microsoft Edge"
 	viewer_delay=7
-elif [[ "$handler" == *"safari"* ]]; then
+elif [[ $handler == *"safari"* ]]; then
 	os_version="$(sw_vers -productVersion)"
-	if [[ "${os_version/.*}" == 11 ]]; then
+	if [[ ${os_version/.*} == 11 ]]; then
 		viewer="Safari"
 		viewer_delay=10
 	fi
 fi
 
-if [[ "$viewer_delay" != "" ]]; then
+if [[ -n $viewer_delay ]]; then
 	# try to work around these browsers opening extra windows/tabs as they start up
 	# (only when they don't have a prior session to restore, in Chrome and Edge);
 	# not needed for Firefox, or Safari on recent macOS -- they're better behaved
@@ -466,7 +466,7 @@ if [[ "$viewer_delay" != "" ]]; then
 	fi
 fi
 
-if [[ "$viewer" == "" ]]; then
+if [[ -z $viewer ]]; then
 	open "$cache_file"
 elif type -p "$viewer" > /dev/null; then
 	"$viewer" "$cache_file"
