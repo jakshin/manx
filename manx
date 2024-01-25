@@ -28,7 +28,7 @@ function usage() {
 	fi
 
 	local b=$bright p=$plain
-	echo -e "Usage:${b} ${script} ${p}[${smul}options${rmul}] ${smul}man-page${rmul}"
+	echo -e "Usage:${b} ${script} ${p}[${smul}view-mode option${rmul}] [${smul}other options ...${rmul}] ${smul}man-page${rmul}"
 	echo -e "      ${b} ${script} --clear-cache ${p}"
 	echo
 
@@ -40,7 +40,12 @@ function usage() {
 
 		echo -e "For usage details, run \"${b}${script} --help${p}\"${more}"
 	else
-		echo -e "Options can be given before or after the man page's name:"
+		echo -e "Options can be given before and/or after the man page's name."
+		echo
+		echo -e "View-mode options control which viewer man pages will be presented in,"
+		echo -e "and/or which file type will be used. These options are mutually exclusive."
+		echo -e "If you pass more than one of them, the last one wins and takes effect."
+		echo -e "If you don't pass any of them, ${b}--direct${p} mode is used by default."
 		echo
 		echo -e "  ${b}-d${p}, ${b}--direct${p}"
 		echo -e "    Open the man page directly in your terminal window like usual,"
@@ -53,7 +58,7 @@ function usage() {
 		echo -e "    (or whichever app you have configured to open HTML files by default),"
 		echo -e "    or the app you pass with the ${b}--browser${p} option."
 		echo
-		echo -e "  ${b}-p${p}, ${b}--pdf${p}, ${b}--pdf-viewer=${p}${smul}AppName${rmul}"
+		echo -e "  ${b}-p${p}, ${b}--pdf${p}, ${b}--pdf-viewer${p}, ${b}--pdf-viewer=${p}${smul}AppName${rmul}"
 		echo -e "    Format the man page as PDF, and open it in your default PDF viewer,"
 		echo -e "    or the app you pass with the ${b}--pdf-viewer${p} option."
 		echo
@@ -64,6 +69,8 @@ function usage() {
 		echo -e "  ${b}-x${p}, ${b}--x-man-page${p}"
 		echo -e "    Open the man page using macOS's ${b}x-man-page${p} URL scheme,"
 		echo -e "    i.e. in a Terminal window with special formatting and colors."
+		echo
+		echo -e "Other options can be combined with each other, and used in any view mode."
 		echo
 		echo -e "  ${b}-M${p} ${smul}manpath${rmul}, ${b}--manpath=${p}${smul}manpath${rmul}"
 		echo -e "    Just like man's ${b}-M${p} option: a colon-separated list of directories"
@@ -171,7 +178,7 @@ function parse_args() {
 			elif [[ $arg == "--browser="* ]]; then
 				viewer=${arg/*=}
 				ext=html
-			elif [[ $arg == "-p" || $arg == "--pdf" ]]; then
+			elif [[ $arg == "-p" || $arg == "--pdf" || $arg == "--pdf-viewer" ]]; then
 				viewer=""
 				ext=pdf
 			elif [[ $arg == "--pdf-viewer="* ]]; then
