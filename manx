@@ -374,7 +374,7 @@ elif [[ $viewer == "direct" ]]; then
 		fi
 	fi
 
-	"${manpager[@]}" < "$cache_file"
+	exec "${manpager[@]}" < "$cache_file"
 	exit
 
 elif [[ $viewer == "x-man-page" ]]; then
