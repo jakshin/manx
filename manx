@@ -392,7 +392,7 @@ elif [[ $ext == "html" ]]; then
 		if [[ $page == "$script" || "$(basename "$page")" == "$script.1" ]]; then
 			# fix up the formatting of our own HTML man page a little
 			indent='&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-			perl -pi -e 's/^(\s*)(&#x2022;)/$1'"$indent"'$2/g' "$cache_file"
+			perl -pi -e 's/^(\s*)\*/$1'"$indent"'&#x2022;/g' "$cache_file"
 		fi
 	fi
 
