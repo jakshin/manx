@@ -338,7 +338,7 @@ elif [[ $viewer == "direct" ]]; then
 		# make section headers fancy, and a different color than other bold text
 		# (which requires stripping the overstrike formatting man has applied to them)
 		perl -pi -e 'sub clean { my ($cleaned) = @_; $cleaned =~ s/\x8.//g; return $cleaned; };\
-			s/^(((\w)\x8\3)( +|(\w)\x8\5)+)/"\e[1m~~( " . (clean $1) . " \e[1m)~~"/ge' "$cache_file"
+			s/^((([\w_,.-])\x8\3)( +|([\w_,.-])\x8\5)+)/"\e[1m~~( " . (clean $1) . " \e[1m)~~"/ge' "$cache_file"
 	fi
 
 	if [[ -z $NO_COLOR ]]; then
