@@ -15,10 +15,9 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111.
 # More details can be found at http://www.gnu.org/licenses/licenses.html.
 
-function usage() {
-	local script
-	script="$(basename "$0")"  # Symlink name, if launched via symlink
+script="$(basename "$0")"  # Symlink name, if launched via symlink
 
+function usage() {
 	local err_msg="$1"
 	if [[ -n $err_msg ]]; then
 		echo -e "${red}Error: ${err_msg}${plain}" 1>&2
@@ -389,6 +388,12 @@ elif [[ $ext == "html" ]]; then
 	# man "$page" | col -b | textutil -stdin -convert html -title "$page" -fontsize 14pt
 	if [[ ! -f $cache_file ]]; then
 		mandoc -T html -O toc,style=styles.css "$page_file" > "$cache_file"
+
+		if [[ $page == "$script" || "$(basename "$page")" == "$script.1" ]]; then
+			# fix up the formatting of our own HTML man page a little
+			indent='&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+			perl -pi -e 's/^(\s*)(&#x2022;)/$1'"$indent"'$2/g' "$cache_file"
+		fi
 	fi
 
 	style_file="$cache_folder/styles.css"

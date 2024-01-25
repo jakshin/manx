@@ -153,43 +153,34 @@
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
-
+.\" --------------------
 .SH "NAME"
 Manx \- view man pages in various ways on macOS
 
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 
-.\" .B manx
-.\" [\fB\-d\fR | \fB\-\-direct\fR]
-.\" [\fB\-h\fR | \fB\-\-html\fR | \fB\-\-browser\fR | \fB\-\-browser=\fR\fIAppName\fR]
-.\" [\fB\-p\fR | \fB\-\-pdf\fR | \fB\-\-pdf\-viewer=\fR\fIAppName\fR]
-.\" [\fB\-t\fR | \fB\-\-text\fR | \fB\-\-editor\fR | \fB\-\-editor=\fR\fIAppName\fR]
-.\" [\fB\-x\fR | \fB\-\-x\-man\-page\fR]
-.\" [\fB\-M\fR \fImanpath\fR | \fB\-\-manpath=\fR\fImanpath\fR]
-.\" [\fB\-S\fR \fIsections\fR | \fB\-\-section=\fR\fIsection\fR | \fB\-\-sections=\fR\fIsections\fR]
-.\" [\fB\-\-clear\-cache\fR]
-.\" \fIman\-page\fR
-
 .B manx \fR[\fIview-mode option\fR] [\fIother options ...\fR] \fIman-page\fR
+.br
+.B manx \-\-clear\-cache
+.br
+.B manx \-\-help
 
-.RS 4
+.\" Indent (commented out)
+.\" .RS 4
 View-mode options are mutually exclusive. If you pass more than one of them, the last one wins:
-    • \fB\-d\fR, \fB\-\-direct\fR (default if no view-mode option is passed)
-    • \fB\-h\fR, \fB\-\-html\fR, \fB\-\-browser\fR, \fB\-\-browser=\fR\fIAppName\fR
-    • \fB\-p\fR, \fB\-\-pdf\fR, \fB\-\-pdf\-viewer=\fR\fIAppName\fR
-    • \fB\-t\fR, \fB\-\-text\fR, \fB\-\-editor\fR, \fB\-\-editor=\fR\fIAppName\fR
-    • \fB\-x\fR, \fB\-\-x\-man\-page\fR
+      • \fB\-d\fR, \fB\-\-direct\fR (default if no view-mode option is passed)
+      • \fB\-h\fR, \fB\-\-html\fR, \fB\-\-browser\fR, \fB\-\-browser=\fR\fIAppName\fR
+      • \fB\-p\fR, \fB\-\-pdf\fR, \fB\-\-pdf\-viewer=\fR\fIAppName\fR
+      • \fB\-t\fR, \fB\-\-text\fR, \fB\-\-editor\fR, \fB\-\-editor=\fR\fIAppName\fR
+      • \fB\-x\fR, \fB\-\-x\-man\-page\fR
 
 Other options can be combined with each other and any view mode:
-    • \fB\-M\fR \fImanpath\fR, \fB\-\-manpath=\fR\fImanpath\fR
-    • \fB\-S\fR \fIsections\fR, \fB\-\-section=\fR\fIsection\fR, \fB\-\-sections=\fR\fIsections\fR
-    • \fB\-\-clear\-cache\fR
-.RE
-
-.B manx \-\-clear\-cache
-
-.B manx \-\-help
+      • \fB\-M\fR \fImanpath\fR, \fB\-\-manpath=\fR\fImanpath\fR
+      • \fB\-S\fR \fIsections\fR, \fB\-\-section=\fR\fIsection\fR, \fB\-\-sections=\fR\fIsections\fR
+      • \fB\-\-clear\-cache\fR
+.\" End indent (commented out)
+.\" .RE
 
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
@@ -210,29 +201,29 @@ nothing else to install or configure, etc. It's just a script you can copy to wh
 These options control which viewer man pages will be presented in, and/or which file type will be used.
 View\-mode options are mutually exclusive. If you pass more than one of them, the last one wins.
 If you don't pass any of them, the default \fB\-\-direct\fR view mode is used.
-
+.\" --------------------
 .IP "\fB\-d\fR, \fB\-\-direct\fR" 5
 .IX Item "-d"
 Open the man page directly in your terminal window like usual,
 but with fancy colors to make it easier and more enjoyable to read.
 This is the default view mode.
-
+.\" --------------------
 .IP "\fB\-h\fR, \fB\-\-html\fR, \fB\-\-browser\fR, \fB\-\-browser=\fR\fIAppName\fR" 5
 .IX Item "-h"
 Format the man page as HTML, and open it in your default browser
 (or whichever app you have configured to open HTML files by default),
 or the app you pass with the \fB\-\-browser\fR option.
-
+.\" --------------------
 .IP "\fB\-p\fR, \fB\-\-pdf\fR, \fB\-\-pdf\-viewer=\fR\fIAppName\fR" 5
 .IX Item "-p"
 Format the man page as PDF, and open it in your default PDF viewer,
 or the app you pass with the \fB\-\-pdf\-viewer\fR option.
-
+.\" --------------------
 .IP "\fB\-t\fR, \fB\-\-text\fR, \fB\-\-editor\fR, \fB\-\-editor=\fR\fIAppName\fR" 5
 .IX Item "-t"
 Format the man page as plain text, and open it in your default editor,
 or the app you pass with the \fB\-\-editor\fR option.
-
+.\" --------------------
 .IP "\fB\-x\fR, \fB\-\-x\-man\-page\fR" 5
 .IX Item "-x"
 Open the man page using macOS's x\-man\-page URL scheme,
@@ -240,23 +231,24 @@ i.e. in a Terminal window with special formatting and colors.
 
 .SH "OTHER OPTIONS"
 .IX Header "OTHER OPTIONS"
-These options can be combined with each other, and used in any view mode.
 
+These options can be combined with each other, and used in any view mode.
+.\" --------------------
 .IP "\fB\-M\fR \fImanpath\fR, \fB\-\-manpath=\fR\fImanpath\fR" 5
 .IX Item "-M"
 A colon-separated list of directories to search for man pages, instead of the default.
 Works just like “\fBman -M\fR”. Overrides the \fBMANPATH\fR environment variable. Also see manpath(1).
-
+.\" --------------------
 .IP "\fB\-S\fR \fIsections\fR, \fB\-\-section=\fR\fIsection\fR, \fB\-\-sections=\fR\fIsections\fR" 5
 .IX Item "-S"
 A manual section, or colon-separated list of sections, to search instead of the default.
 Works just like “\fBman -S\fR”. Overrides the \fBMANSECT\fR environment variable.
-
+.\" --------------------
 .IP "\fB\-\-clear\-cache\fR" 5
 .IX Item "--clear-cache"
 Remove cached generated HTML/PDF/text files, from previous invocations of \fBmanx\fR.
 You may use this option with or without viewing a man page.
-
+.\" --------------------
 .IP "\fB\-\-help\fR" 5
 .IX Item "--help"
 Display usage information and immediately exit, without attempting to view a man page.
