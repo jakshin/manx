@@ -53,9 +53,9 @@ function usage() {
 		echo -e "    (or whichever app you have configured to open HTML files by default),"
 		echo -e "    or the app you pass with the ${b}--browser${p} option."
 		echo
-		echo -e "  ${b}-p${p}, ${b}--pdf${p}, ${b}--viewer=${p}${smul}AppName${rmul}"
+		echo -e "  ${b}-p${p}, ${b}--pdf${p}, ${b}--pdf-viewer=${p}${smul}AppName${rmul}"
 		echo -e "    Format the man page as PDF, and open it in your default PDF viewer,"
-		echo -e "    or the app you pass with the ${b}--viewer${p} option."
+		echo -e "    or the app you pass with the ${b}--pdf-viewer${p} option."
 		echo
 		echo -e "  ${b}-t${p}, ${b}--text${p}, ${b}--editor${p}, ${b}--editor=${p}${smul}AppName${rmul}"
 		echo -e "    Format the man page as plain text, and open it in your default editor,"
@@ -174,7 +174,7 @@ function parse_args() {
 			elif [[ $arg == "-p" || $arg == "--pdf" ]]; then
 				viewer=""
 				ext=pdf
-			elif [[ $arg == "--viewer="* ]]; then
+			elif [[ $arg == "--pdf-viewer="* ]]; then
 				viewer=${arg/*=}
 				ext=pdf
 			elif [[ $arg == "-t" || $arg == "--text" || $arg == "--editor" ]]; then
