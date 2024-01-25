@@ -1,6 +1,6 @@
 .\" Man page for manx
 .\"
-.\" Copyright (c) 2015 Jason Jackson
+.\" Copyright (c) 2015,2024 Jason Jackson
 .\"
 .\" This program is free software; you can redistribute it and/or modify it under the terms
 .\" of the GNU General Public License as published by the Free Software Foundation;
@@ -148,60 +148,131 @@
 .\" ========================================================================
 .\"
 .IX Title "manx 1"
-.TH manx 1 "January 29, 2015" "" ""
+.TH MANX 1 "January 2024" "macOS" "General Commands Manual"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
 .nh
 
 .SH "NAME"
-manx \- view man pages in various ways on OS X
+Manx \- view man pages in various ways on macOS
 
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
-.B manx 
-[\fB-b\fR|\fB-e\fR|\fB-p\fR|\fB-t\fR] \fIman\-page\fR
+
+.\" .B manx
+.\" [\fB\-d\fR | \fB\-\-direct\fR]
+.\" [\fB\-h\fR | \fB\-\-html\fR | \fB\-\-browser\fR | \fB\-\-browser=\fR\fIAppName\fR]
+.\" [\fB\-p\fR | \fB\-\-pdf\fR | \fB\-\-pdf\-viewer=\fR\fIAppName\fR]
+.\" [\fB\-t\fR | \fB\-\-text\fR | \fB\-\-editor\fR | \fB\-\-editor=\fR\fIAppName\fR]
+.\" [\fB\-x\fR | \fB\-\-x\-man\-page\fR]
+.\" [\fB\-M\fR \fImanpath\fR | \fB\-\-manpath=\fR\fImanpath\fR]
+.\" [\fB\-S\fR \fIsections\fR | \fB\-\-section=\fR\fIsection\fR | \fB\-\-sections=\fR\fIsections\fR]
+.\" [\fB\-\-clear\-cache\fR]
+.\" \fIman\-page\fR
+
+.B manx \fR[\fIview-mode option\fR] [\fIother options ...\fR] \fIman-page\fR
+
+.RS 4
+View-mode options are mutually exclusive. If you pass more than one of them, the last one wins:
+    • \fB\-d\fR, \fB\-\-direct\fR (default if no view-mode option is passed)
+    • \fB\-h\fR, \fB\-\-html\fR, \fB\-\-browser\fR, \fB\-\-browser=\fR\fIAppName\fR
+    • \fB\-p\fR, \fB\-\-pdf\fR, \fB\-\-pdf\-viewer=\fR\fIAppName\fR
+    • \fB\-t\fR, \fB\-\-text\fR, \fB\-\-editor\fR, \fB\-\-editor=\fR\fIAppName\fR
+    • \fB\-x\fR, \fB\-\-x\-man\-page\fR
+
+Other options can be combined with each other and any view mode:
+    • \fB\-M\fR \fImanpath\fR, \fB\-\-manpath=\fR\fImanpath\fR
+    • \fB\-S\fR \fIsections\fR, \fB\-\-section=\fR\fIsection\fR, \fB\-\-sections=\fR\fIsections\fR
+    • \fB\-\-clear\-cache\fR
+.RE
+
+.B manx \-\-clear\-cache
+
+.B manx \-\-help
 
 .SH "DESCRIPTION"
 .IX Header "DESCRIPTION"
-\&\fBmanx\fR allows man pages to be viewed using various GUIs on OS X: Terminal's built-in viewer, Preview as a PDF, your default editor as text, or your default web browser as HTML (if the \fBman2html\fR program is installed). It is implemented as a fairly simple shell script.
 
-.SH "OPTIONS"
-.IX Header "OPTIONS"
-Each option except \fB\-h \fR(\fB\-\-help\fR) tells \fBmanx\fR which viewer you'd like to view your desired man page in, and can be overridden later on the command line by simply specifying a different option. Options may be given on the command line before or after the \fIman-page\fR to view.
+Manx is a command\-line utility that makes it easy to view man pages more conveniently on macOS.
+By default, it presents man pages in your terminal, just like \&\fBman\fR,
+but applies color and other formatting tweaks to them, to improve readability.
 
-.IP "\fB\-h\fR, \fB\-\-help\fR" 5
+It also makes it easy to view man pages as HTML in your browser, PDF in Preview (or other PDF viewers),
+or plain text in an editor, or to open them in macOS's built\-in man page viewer (i.e. a special Terminal window).
+
+Manx only relies on software included with macOS to work, so it has no dependencies,
+nothing else to install or configure, etc. It's just a script you can copy to wherever you'd like.
+
+.SH "VIEW-MODE OPTIONS"
+.IX Header "VIEW-MODE OPTIONS"
+
+These options control which viewer man pages will be presented in, and/or which file type will be used.
+View\-mode options are mutually exclusive. If you pass more than one of them, the last one wins.
+If you don't pass any of them, the default \fB\-\-direct\fR view mode is used.
+
+.IP "\fB\-d\fR, \fB\-\-direct\fR" 5
+.IX Item "-d"
+Open the man page directly in your terminal window like usual,
+but with fancy colors to make it easier and more enjoyable to read.
+This is the default view mode.
+
+.IP "\fB\-h\fR, \fB\-\-html\fR, \fB\-\-browser\fR, \fB\-\-browser=\fR\fIAppName\fR" 5
 .IX Item "-h"
-Display usage information and immediately exit, without attempting to view a man page. You may also run \fBmanx\fR with no \fIman-page\fR specified to view the same usage information.
+Format the man page as HTML, and open it in your default browser
+(or whichever app you have configured to open HTML files by default),
+or the app you pass with the \fB\-\-browser\fR option.
 
-.IP "\fB\-b\fR, \fB\-\-browser\fR" 5
-.IX Item "-b"
-Open \fIman-page\fR in your default web browser, i.e. the application which opens *.html files by default. You must have the \fBman2html\fR program installed to use this option; it is available from MacPorts (http://www.macports.org).
-
-.IP "\fB\-e\fR, \fB\-\-editor\fR" 5
-.IX Item "-e"
-Open \fIman-page\fR in your default text editor, i.e. the application which opens *.txt files by default.
-
-.IP "\fB\-p\fR, \fB\-\-preview\fR" 5
+.IP "\fB\-p\fR, \fB\-\-pdf\fR, \fB\-\-pdf\-viewer=\fR\fIAppName\fR" 5
 .IX Item "-p"
-Open \fIman-page\fR in Preview.app, as a PDF file.
+Format the man page as PDF, and open it in your default PDF viewer,
+or the app you pass with the \fB\-\-pdf\-viewer\fR option.
 
-.IP "\fB\-t\fR, \fB\-\-terminal\fR" 5
-.IX Item "-p"
-Open \fIman-page\fR in Terminal's man-page viewer, which is a specially-formatted but otherwise normal Terminal window which uses \fBless\fR to display the man page. This facility is also available in Terminal itself by highlighting some text and right-clicking, pressing Ctrl-Cmd-?, or using the \fBHelp\fR menu, but all of those approaches can be unwieldy at times.
+.IP "\fB\-t\fR, \fB\-\-text\fR, \fB\-\-editor\fR, \fB\-\-editor=\fR\fIAppName\fR" 5
+.IX Item "-t"
+Format the man page as plain text, and open it in your default editor,
+or the app you pass with the \fB\-\-editor\fR option.
 
-This is the default action if no options are given in the \fBMANX_OPTS\fR environment variable (see below) or on the command line.
+.IP "\fB\-x\fR, \fB\-\-x\-man\-page\fR" 5
+.IX Item "-x"
+Open the man page using macOS's x\-man\-page URL scheme,
+i.e. in a Terminal window with special formatting and colors.
+
+.SH "OTHER OPTIONS"
+.IX Header "OTHER OPTIONS"
+These options can be combined with each other, and used in any view mode.
+
+.IP "\fB\-M\fR \fImanpath\fR, \fB\-\-manpath=\fR\fImanpath\fR" 5
+.IX Item "-M"
+A colon-separated list of directories to search for man pages, instead of the default.
+Works just like “\fBman -M\fR”. Overrides the \fBMANPATH\fR environment variable. Also see manpath(1).
+
+.IP "\fB\-S\fR \fIsections\fR, \fB\-\-section=\fR\fIsection\fR, \fB\-\-sections=\fR\fIsections\fR" 5
+.IX Item "-S"
+A manual section, or colon-separated list of sections, to search instead of the default.
+Works just like “\fBman -S\fR”. Overrides the \fBMANSECT\fR environment variable.
+
+.IP "\fB\-\-clear\-cache\fR" 5
+.IX Item "--clear-cache"
+Remove cached generated HTML/PDF/text files, from previous invocations of \fBmanx\fR.
+You may use this option with or without viewing a man page.
+
+.IP "\fB\-\-help\fR" 5
+.IX Item "--help"
+Display usage information and immediately exit, without attempting to view a man page.
 
 .SH "ENVIRONMENT"
 .IX Header "ENVIRONMENT"
-If the \fBMANX_OPTS\fR environment variable is set, options are parsed from it before command-line options are parsed. This allows you to set a default viewer, and later override that choice on the command line if desired. For instance, you could set \fBMANX_OPTS\fR to \fB\-\-preview\fR to view man pages in Preview by default, using just "\fBmanx\fR \fIman\-page\fR" on the command line, but later choose to view a specific man page in a different viewer by using a command-line option in the usual way.
 
-\fB\-h\fR, \fB\-\-help\fR, and any string which doesn't begin with a dash are ignored when parsing \fBMANX_OPTS\fR.
+If the \fBMANX_OPTIONS\fR environment variable is set, options are parsed from it before command\-line options are parsed.
+This allows you to set defaults, such as your preferred viewer, and later override those choices on the command line if desired.
+For instance, you could set \fBMANX_OPTIONS\fR to “\-\-pdf” to view man pages as PDF by default,
+using just “\fBmanx\fR \fIman\-page\fR” on the command line, but later choose to view a specific man page in a different viewer
+by using a command\-line option in the usual way.
+
+Manx ignores the \fB\-\-help\fR option, and any string that doesn't begin with a dash, while parsing \fBMANX_OPTIONS\fR.
 
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
-\&\fIman\fR\|(1)
 
-.SH "AUTHOR"
-.IX Header "AUTHOR"
-The manx shell script, and this man page, were written by Jason Jackson <jasonjackson@pobox.com>.
+man(1), mandoc(1), manpath(1)
