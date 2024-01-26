@@ -1,4 +1,8 @@
-![A Manx cat says: RTFM, yo](Manx_RTFM.jpg)
+<div align="center">
+	<img width=350 alt="Screenshot" src="Manx_Screenshot.png">
+    &nbsp;&nbsp;&nbsp;&nbsp;
+	<img alt="A Manx cat says: RTFM, yo" src="Manx_RTFM.jpg">
+</div>
 
 ## Introduction
 
