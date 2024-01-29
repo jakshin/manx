@@ -333,9 +333,21 @@ fi
 
 # --- Test to see whether the request man page exists ---
 
-# if the requested man page doesn't exist,
-# "man -w" will display a "No manual entry" error on stderr
-if [[ -n $page ]]; then
+if [[ $page == */* ]]; then
+	if [[ ! -e $page ]]; then
+		[[ -L $page ]] && msg="Bad symlink" || msg="File not found"
+		echo "$msg: $page" 1>&2
+		exit 1
+	elif [[ ! -f $page ]]; then
+		echo "Not a manual file: $page"
+		exit 1
+	else
+		page_file="$(realpath -- "$page")"
+	fi
+
+elif [[ -n $page ]]; then
+	# if the requested man page doesn't exist,
+	# "man -w" will display a "No manual entry" error on stderr
 	if ! page_file="$(man -w "$page")" > /dev/null; then
 
 		echo -en "${dim}"
@@ -385,6 +397,12 @@ elif [[ -n $ext ]]; then
 	# delete any cached files over 30 days old, then any empty directories
 	find "$cache_root" -type f -mtime +30d -print0 | xargs -0 rm
 	find "$cache_root" -depth -type d -not -path "$cache_root" -not -path "$cache_folder" -empty -exec /bin/bash -c "rmdir {} > /dev/null" \;
+fi
+
+# if we're viewing a manual file instead of page, create any needed subdirectories
+if [[ $page == */* ]]; then
+	cache_folder+="$(dirname -- "$page_file")"
+	mkdir -p "$cache_folder"
 fi
 
 # --- Open the requested man page, in the requested viewer ---
