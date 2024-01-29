@@ -160,7 +160,7 @@ Manx \- view man pages in various ways on macOS
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 
-.B manx \fR[\fIview-mode option\fR] [\fIother options ...\fR] \fIman-page\fR
+.B manx \fR[\fIview-mode option\fR] [\fIother options ...\fR] [\fIsection\fR] \fIman-page\fR
 .br
 .B manx \-\-clear\-cache
 .br
@@ -177,7 +177,7 @@ View-mode options are mutually exclusive. If you pass more than one of them, the
 
 Other options can be combined with each other and any view mode:
       * \fB\-M\fR \fImanpath\fR, \fB\-\-manpath=\fR\fImanpath\fR
-      * \fB\-S\fR \fIsections\fR, \fB\-\-section=\fR\fIsection\fR, \fB\-\-sections=\fR\fIsections\fR
+      * \fB\-S\fR \fIsections\fR, \fB\-\-sections=\fR\fIsections\fR
       * \fB\-\-clear\-cache\fR
 .\" End indent (commented out)
 .\" .RE
@@ -193,13 +193,13 @@ It also makes it easy to view man pages as HTML in your browser, PDF in Preview 
 or plain text in an editor, or to open them in macOS's built\-in man page viewer (i.e. a special Terminal window).
 
 Manx only relies on software included with macOS to work, so it has no dependencies,
-nothing else to install or configure, etc. It's just a script you can copy to wherever you'd like.
+nothing else to install or configure, etc.  It's just a script you can copy to wherever you'd like.
 
 .SH "VIEW-MODE OPTIONS"
 .IX Header "VIEW-MODE OPTIONS"
 
 These options control which viewer man pages will be presented in, and/or which file type will be used.
-View\-mode options are mutually exclusive. If you pass more than one of them, the last one wins.
+View\-mode options are mutually exclusive.  If you pass more than one of them, the last one wins.
 If you don't pass any of them, the default \fB\-\-direct\fR view mode is used.
 .\" --------------------
 .IP "\fB\-d\fR, \fB\-\-direct\fR" 5
@@ -237,12 +237,12 @@ These options can be combined with each other, and used in any view mode.
 .IP "\fB\-M\fR \fImanpath\fR, \fB\-\-manpath=\fR\fImanpath\fR" 5
 .IX Item "-M"
 A colon-separated list of directories to search for man pages, instead of the default.
-Works just like “\fBman -M\fR”. Overrides the \fBMANPATH\fR environment variable. Also see manpath(1).
+Works just like “\fBman -M\fR”.  Overrides the \fBMANPATH\fR environment variable.  Also see manpath(1).
 .\" --------------------
-.IP "\fB\-S\fR \fIsections\fR, \fB\-\-section=\fR\fIsection\fR, \fB\-\-sections=\fR\fIsections\fR" 5
+.IP "\fB\-S\fR \fIsections\fR, \fB\-\-sections=\fR\fIsections\fR" 5
 .IX Item "-S"
 A manual section, or colon-separated list of sections, to search instead of the default.
-Works just like “\fBman -S\fR”. Overrides the \fBMANSECT\fR environment variable.
+Works just like “\fBman -S\fR”.  Overrides the \fBMANSECT\fR environment variable.
 .\" --------------------
 .IP "\fB\-\-clear\-cache\fR" 5
 .IX Item "--clear-cache"
@@ -262,7 +262,11 @@ For instance, you could set \fBMANX_OPTIONS\fR to “\-\-pdf” to view man page
 using just “\fBmanx\fR \fIman\-page\fR” on the command line, but later choose to view a specific man page in a different viewer
 by using a command\-line option in the usual way.
 
-Manx ignores the \fB\-\-help\fR option, and any string that doesn't begin with a dash, while parsing \fBMANX_OPTIONS\fR.
+Setting the \fBMANPATH\fR environment variable changes the search path to the specified list of directories, separated by colons.
+Absolute paths must be used.  Invalid paths, and paths without manual databases, are ignored.
+
+Setting the \fBMANSECT\fR environment variable restricts manual sections searched to the specified colon delimited list,
+just like the \fB-S\fR option.  All sections are searched by default.
 
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"

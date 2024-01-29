@@ -1,6 +1,7 @@
 #!/bin/bash -e
 # manx -- view man pages in various ways on macOS
 # Copyright (c) 2015,2024 Jason Jackson
+# https://github.com/jakshin/manx
 #
 # This program is free software; you can redistribute it and/or modify it under the terms
 # of the GNU General Public License as published by the Free Software Foundation;
@@ -23,11 +24,12 @@ function usage() {
 		echo -e "${red}Error: ${err_msg}${plain}" 1>&2
 		echo
 	else
-		echo -e "${bright}Manx -- view man pages better on macOS${plain}\n"
+		echo -e "${bright}Manx -- view man pages better on macOS${plain}"
+		echo -e "https://github.com/jakshin/manx\n"
 	fi
 
 	local b=$bright p=$plain
-	echo -e "Usage:${b} ${script} ${p}[${smul}view-mode option${rmul}] [${smul}other options ...${rmul}] ${smul}man-page${rmul}"
+	echo -e "Usage:${b} ${script} ${p}[${smul}view-mode option${rmul}] [${smul}other options ...${rmul}] [${smul}section${rmul}] ${smul}man-page${rmul}"
 	echo -e "      ${b} ${script} --clear-cache ${p}"
 	echo
 
@@ -70,14 +72,14 @@ function usage() {
 		echo -e "    i.e. in a Terminal window with special formatting and colors."
 		echo
 		echo -e "Other options can be combined with each other, and used in any view mode."
+		echo -e "If you pass one of these options multiple times, the last version wins."
 		echo
 		echo -e "  ${b}-M${p} ${smul}manpath${rmul}, ${b}--manpath=${p}${smul}manpath${rmul}"
 		echo -e "    Just like man's ${b}-M${p} option: a colon-separated list of directories"
 		echo -e "    to search for man pages, instead of the default. Overrides ${b}\$MANPATH${p}."
 		echo -e "    Also see ${b}manpath(1)${p}."
 		echo
-		echo -e "  ${b}-S${p} ${smul}section(s)${rmul}, ${b}--section=${p}${smul}section${rmul},"\
-					"${b}--sections=${p}${smul}sections${rmul}"
+		echo -e "  ${b}-S${p} ${smul}sections${rmul}, ${b}--sections=${p}${smul}sections${rmul}"
 		echo -e "    Just like man's ${b}-S${p} option: a manual section, or colon-separated list"
 		echo -e "    of sections to search, instead of the default. Overrides ${b}\$MANSECT${p}."
 		echo
@@ -121,10 +123,11 @@ function find_self() {
 
 if [[ -z $NO_COLOR ]]; then
 	red="\033[0;1;31m"
+	dim="\033[38;5;245m"
 	bright="\033[1m"
 	plain="\033[0m"
 else
-	unset red bright plain
+	unset red dim bright plain
 fi
 
 # https://unix.stackexchange.com/questions/108699/documentation-on-less-termcap-variables
@@ -140,7 +143,6 @@ clear_cache=false
 
 man_path=""
 man_sections=""
-man_sections_opt="-S"
 
 function parse_args() {
 	local in_environment_variable=""
@@ -206,7 +208,6 @@ function parse_args() {
 				man_sections=${arg:2}
 			elif [[ $arg == "--section="* || $arg == "--sections="* ]]; then
 				man_sections=${arg/*=}
-				man_sections_opt=${arg/=*}
 
 			elif [[ $arg == "--clear-cache" ]]; then
 				clear_cache=true
@@ -218,50 +219,30 @@ function parse_args() {
 			if [[ $parsing_from_env == true ]]; then
 				# non-option given in $MANX_OPTIONS; ignore it
 				continue
-			elif [[ -n $page ]]; then
+			elif [[ -z $page ]]; then
+				page=$arg
+			elif [[ $page =~ ^[1-9n]$ ]]; then
+				# what we thought was the page was actually a section in the optional first argument
+				man_sections=$page
+				page=$arg
+			elif [[ $arg == "$page" ]]; then
+				continue
+			else
 				# page was already specified in a previous argument
 				usage "You can only view one man page at a time (\"$page\" then \"$arg\")"
-			else
-				page=$arg
 			fi
 		fi
 	done
 
 	if [[ $man_path == "@" ]]; then
 		usage "Missing manual path after -M${in_environment_variable}"
-
 	elif [[ -n $man_path ]]; then
 		export MANPATH=$man_path
 	fi
 
 	if [[ $man_sections == "@" ]]; then
 		usage "Missing manual section/list after -S${in_environment_variable}"
-
 	elif [[ -n $man_sections ]]; then
-		local sections dirs
-		IFS=":" read -ra sections <<< "$man_sections"
-		IFS=":" read -ra dirs <<< "$(manpath)"  # uses $MANPATH if set, defaults if not
-
-		local section
-		for section in "${sections[@]}"; do
-			if [[ -z $section ]]; then
-				continue
-			fi
-
-			local dir
-			for dir in "${dirs[@]}"; do
-				if [[ -d "${dir}/man${section}" ]]; then
-					continue 2  # NOTE: continue the "for section" loop, not this inner loop
-				fi
-			done
-
-			if [[ $parsing_from_env == true ]]; then
-				usage "Invalid manual section${in_environment_variable}: ${section}"
-			else
-				usage "Invalid manual section passed with ${man_sections_opt}: ${section}"
-			fi
-		done
-
 		export MANSECT=$man_sections
 	fi
 }
@@ -285,21 +266,29 @@ fi
 
 # --- Test to see whether the request man page exists ---
 
-# if the requested man page doesn't exist, this will display a "No manual entry" error on stderr,
-# and exit with a non-zero status
+# if the requested man page doesn't exist,
+# "man -w" will display a "No manual entry" error on stderr
 if [[ -n $page ]]; then
 	if ! page_file="$(man -w "$page")" > /dev/null; then
 
-		if [[ $man_sections == *:* ]]; then
-			echo "In sections: $man_sections" 1>&2
-		elif [[ -n $man_sections ]]; then
-			echo "In section: $man_sections" 1>&2
+		echo -en "${dim}"
+		if [[ $MANSECT == *:* ]]; then
+			echo "In sections: ${MANSECT//:/, }" 1>&2
+		elif [[ -n $MANSECT ]]; then
+			echo "In section: $MANSECT" 1>&2
 		fi
 
-		if [[ -n $man_path ]]; then
-			echo "Using path: $man_path" 1>&2
+		if [[ $MANPATH == *:* ]]; then
+			echo $'\n'"Searching in directories:" 1>&2
+			IFS=":" read -ra dirs <<< "$MANPATH"
+			for dir in "${dirs[@]}"; do
+				echo "$dir" 1>&2
+			done
+		elif [[ -n $MANPATH ]]; then
+			echo "Searching in directory: $MANPATH" 1>&2
 		fi
 
+		echo -en "${plain}"
 		exit 1
 	fi
 fi
