@@ -20,7 +20,7 @@ script="$(basename "$0")"  # Symlink name, if launched via symlink
 
 function usage() {
 	local err_msg="$1"
-	if [[ -n $err_msg ]]; then
+	if [[ -n $err_msg && $err_msg != - ]]; then
 		echo -e "${red}Error: ${err_msg}${plain}" 1>&2
 		echo
 	else
@@ -29,8 +29,11 @@ function usage() {
 	fi
 
 	local b=$bright p=$plain
-	echo -e "Usage:${b} ${script} ${p}[${smul}view-mode option${rmul}] [${smul}other options ...${rmul}] [${smul}section${rmul}] ${smul}man-page${rmul}"
+	echo -e "Usage:${b} ${script} ${p}[${smul}view-mode option${rmul}] [${smul}configuration options ...${rmul}]"\
+						"[${smul}section${rmul}] ${smul}man-page${rmul}"
 	echo -e "      ${b} ${script} --clear-cache ${p}"
+	echo -e "      ${b} ${script} --completion ${p}"
+	echo -e "      ${b} ${script} --help ${p}"
 	echo
 
 	if [[ -n $err_msg ]]; then
@@ -71,7 +74,7 @@ function usage() {
 		echo -e "    Open the man page using macOS's ${b}x-man-page${p} URL scheme,"
 		echo -e "    i.e. in a Terminal window with special formatting and colors."
 		echo
-		echo -e "Other options can be combined with each other, and used in any view mode."
+		echo -e "Configuration options can be combined with each other, and used in any view mode."
 		echo -e "If you pass one of these options multiple times, the last version wins."
 		echo
 		echo -e "  ${b}-M${p} ${smul}manpath${rmul}, ${b}--manpath=${p}${smul}manpath${rmul}"
@@ -86,6 +89,15 @@ function usage() {
 		echo -e "  ${b}--clear-cache${p}"
 		echo -e "    Remove cached generated HTML/PDF/text files. You may use this option"
 		echo -e "    with or without viewing a man page."
+		echo
+		echo -e "Special options make Manx do something other than view a man page."
+		echo
+		echo -e "  ${b}--completion${p}"
+		echo -e "    Output shell script that implements command-line completion for Manx in zsh,"
+		echo -e "    then exit. To use it, redirect it into a file like \$fpath[1]/_manx."
+		echo
+		echo -e "  ${b}--help${p}"
+		echo -e "    Display this usage information, then exit."
 	fi
 
 	if [[ -n $MANX_OPTIONS ]]; then
@@ -140,6 +152,7 @@ viewer=direct
 ext=""   # the extension/type of our generated file (n/a for x-man-page)
 page=""  # the man page to view, e.g. "ls"
 clear_cache=false
+completion=false
 
 man_path=""
 man_sections=""
@@ -211,6 +224,10 @@ function parse_args() {
 
 			elif [[ $arg == "--clear-cache" ]]; then
 				clear_cache=true
+			elif [[ $arg == "--completion" ]]; then
+				if [[ $parsing_from_env != true ]]; then
+					completion=true
+				fi
 			else
 				# unrecognized option
 				usage "Invalid option \"${arg}\"${in_environment_variable}"
@@ -260,8 +277,58 @@ if [[ $viewer == "direct" ]]; then
 	ext="col${cols}"
 fi
 
-if [[ -z $page && $clear_cache == false ]]; then
-	usage
+if [[ -z $page && $clear_cache == false && $completion == false ]]; then
+	usage -
+fi
+
+# --- Output our zsh completion script, if we're supposed to do that ---
+
+if [[ $completion == true ]]; then
+	compscript="I2NvbXBkZWYgbWFueAoKZnVuY3Rpb24gX21hbngoKSB7Cglsb2NhbCB3b3JkIHZhbD0iIiBhcmcyPSIiCglmb3Igd29yZCBpbiAiJ
+				Ht3b3Jkc1tAXToxfSI7IGRvICAKCQlpZiBbWyAkdmFsID09IEAgXV07IHRoZW4KCQkJdmFsPSIiCgkJZWxpZiBbWyAkd29yZCA9PS
+				AtTSB8fCAkd29yZCA9PSAtUyBdXTsgdGhlbgoJCQl2YWw9QAoJCWVsaWYgW1sgJHdvcmQgIT0gLSogXV07IHRoZW4KCQkJW1sgJHd
+				vcmQgPX4gXlsxLTluXSQgXV0gJiYgYXJnMj0iMjo6IDoubWFueF9jb21wbGV0ZV9wYWdlcyIKCQkJYnJlYWsKCQlmaQoJZG9uZQoK
+				CV9hcmd1bWVudHMgOiBcCgkJIjE6IDoubWFueF9jb21wbGV0ZV9wYWdlcyIgJGFyZzIgXAoJCSsgJyh2aWV3KScgXAoJCQl7LWQsL
+				S1kaXJlY3R9J1tWaWV3IHRoZSBtYW4gcGFnZSBkaXJlY3RseSBpbiB0aGUgdGVybWluYWwsIHdpdGggY29sb3JzXScgXAoJCQl7LW
+				gsLS1odG1sfSdbVmlldyB0aGUgbWFuIHBhZ2UgYXMgSFRNTCBpbiB5b3VyIGRlZmF1bHQgYnJvd3Nlcl0nIFwKCQkJJy0tYnJvd3N
+				lcj0tW1ZpZXcgdGhlIG1hbiBwYWdlIGFzIEhUTUwgaW4gYSBzcGVjaWZpYyBicm93c2VyXScgXAoJCQl7LXAsLS1wZGZ9J1tWaWV3
+				IHRoZSBtYW4gcGFnZSBhcyBQREYgaW4geW91ciBkZWZhdWx0IHZpZXdlcl0nIFwKCQkJJy0tcGRmLXZpZXdlcj0tW1ZpZXcgdGhlI
+				G1hbiBwYWdlIGFzIFBERiBpbiBhIHNwZWNpZmljIHZpZXdlcl0nIFwKCQkJey10LC0tdGV4dH0nW1ZpZXcgdGhlIG1hbiBwYWdlIG
+				FzIHRleHQgaW4geW91ciBkZWZhdWx0IGVkaXRvcl0nIFwKCQkJJy0tZWRpdG9yPS1bVmlldyB0aGUgbWFuIHBhZ2UgYXMgdGV4dCB
+				pbiBhIHNwZWNpZmljIGVkaXRvcl0nIFwKCQkJey14LC0teC1tYW4tcGFnZX0nW1ZpZXcgdGhlIG1hbiBwYWdlIGluIGEgc3BlY2lh
+				bCBwb3B1cCBUZXJtaW5hbCB3aW5kb3ddJyBcCgkJKyAnKG1hbnBhdGgpJyBcCgkJCXstTSssLS1tYW5wYXRoPS19J1tNYW51YWwgZ
+				GlyZWN0b3JpZXMgdG8gc2VhcmNoLCBzZXBhcmF0ZWQgYnkgY29sb25zXTogOl9kaXJfbGlzdCcgXAoJCSsgJyhzZWN0aW9ucyknIF
+				wKCQkJey1TKywtLXNlY3Rpb25zPS19J1tNYW51YWwgc2VjdGlvbnMgdG8gc2VhcmNoLCBzZXBhcmF0ZWQgYnkgY29sb25zXTogOi5
+				tYW54X2NvbXBsZXRlX3NlY3Rpb25zJyBcCgkJKyAnKGNhY2hlKScgXAoJCQknLS1jbGVhci1jYWNoZVtSZW1vdmUgY2FjaGVkIGdl
+				bmVyYXRlZCBIVE1ML1BERi90ZXh0IGZpbGVzXScgXAoJCSsgJyhjb21wKScgXAoJCQknLS1jb21wbGV0aW9uW091dG91dCB6c2ggY
+				29tcGxldGlvbiBzY3JpcHQgYW5kIGV4aXRdJyBcCgkJKyAnKGhlbHApJyBcCgkJCSctLWhlbHBbU2hvdyB1c2FnZSBpbmZvcm1hdG
+				lvbiBhbmQgZXhpdF0nCn0KCmZ1bmN0aW9uIC5tYW54X2NvbXBsZXRlX3NlY3Rpb25zKCkgewoJZGVjbGFyZSAtQSBkZXNjcz0oCgk
+				JWzFdPSJHZW5lcmFsIGNvbW1hbmRzIgoJCVsyXT0iU3lzdGVtIGNhbGxzIgoJCVszXT0iTGlicmFyeSByb3V0aW5lcyIKCQlbNF09
+				IkRldmljZSBkcml2ZXJzLCBTcGVjaWFsIGZpbGVzIGFuZCBzb2NrZXRzIgoJCVs1XT0iRmlsZSBmb3JtYXRzIgoJCVs2XT0iR2FtZ
+				XMgYW5kIGZ1biBzdHVmZiIKCQlbN109Ik1pc2NlbGxhbmVvdXMiCgkJWzhdPSJTeXN0ZW0gbWFuYWdlbWVudCIKCQlbOV09Iktlcm
+				5lbCBkZXZlbG9wbWVudCIKCQlbbl09IlRjbC9UayIKCSkKCglkZWNsYXJlIC1hIGV4aXN0cz0oKQoJZGVjbGFyZSAtYSBzZWN0cz0
+				oIiR7KGspZGVzY3NbQF19IikKCglsb2NhbCBtcGF0aD0iJCgubWFueF9nZXRfb3B0dmFsIC1NIC0tbWFucGF0aCkiCglbWyAtbiAk
+				bXBhdGggXV0gfHwgbXBhdGg9JE1BTlBBVEgKCVtbIC1uICRtcGF0aCBdXSB8fCBtcGF0aD0iJCgvdXNyL2Jpbi9tYW5wYXRoKSIKC
+				glkZWNsYXJlIC1hIGRpcnMKCUlGUz0iOiIgcmVhZCAtckEgZGlycyA8PDwgIiRtcGF0aCIKCglsb2NhbCBzZWN0IGRpcgoJZm9yIH
+				NlY3QgaW4gIiR7c2VjdHNbQF19IjsgZG8KCQlmb3IgZGlyIGluICIke2RpcnNbQF19IjsgZG8KCQkJaWYgW1sgLWQgIiR7ZGlyfS9
+				tYW4ke3NlY3R9IiBdXTsgdGhlbgoJCQkJZXhpc3RzKz0oIiRzZWN0OiRkZXNjc1skc2VjdF0iKQoJCQkJYnJlYWsKCQkJZmkKCQlk
+				b25lCglkb25lCgoJX3NlcXVlbmNlIC1zIDogX2Rlc2NyaWJlIC10IHNlY3Rpb25zICdNYW51YWwgc2VjdGlvbicgZXhpc3RzCn0KC
+				mZ1bmN0aW9uIC5tYW54X2NvbXBsZXRlX3BhZ2VzKCkgewoJaWYgW1sgJHdvcmRzWyRDVVJSRU5UXSA9PSAqLyogXV07IHRoZW4KCQ
+				lfZmlsZXMgLWcgJyouKD98PC0+KiknICIkQCIKCQlyZXR1cm4KCWZpCgoJbG9jYWwgbXNlY3Q9IiQoLm1hbnhfZ2V0X29wdHZhbCA
+				tUyAtLXNlY3Rpb25zKSIKCVtbIC1uICRtc2VjdCBdXSB8fCBtc2VjdD0kTUFOU0VDVCAgCgoJbG9jYWwgc2VjdHM9JHttc2VjdC8v
+				Oi98fSAgCglbWyAtbiAkc2VjdHMgXV0gfHwgc2VjdHM9JyonCgoJbG9jYWwgbXBhdGg9IiQoLm1hbnhfZ2V0X29wdHZhbCAtTSAtL
+				W1hbnBhdGgpIgoJW1sgLW4gJG1wYXRoIF1dIHx8IG1wYXRoPSRNQU5QQVRICglbWyAtbiAkbXBhdGggXV0gfHwgbXBhdGg9IiQoL3
+				Vzci9iaW4vbWFucGF0aCkiCgoJZGVjbGFyZSAtYSBkaXJzCglJRlM9IjoiIHJlYWQgLXJBIGRpcnMgPDw8ICIkbXBhdGgiCgoJbG9
+				jYWwgcGFnZXM9KCR7KGYpIiQoZXZhbCBwcmludGYgJyVzXFxuJyAkXmRpcnMvIm1hbigkc2VjdHMpLyooTkQ6cjp0KSIpIn0pCgoJ
+				Y29tcGFkZCAiJEAiIC1hIC0tIHBhZ2VzCn0KCmZ1bmN0aW9uIC5tYW54X2dldF9vcHR2YWwoKSB7Cglsb2NhbCBzaG9ydD0kMSBsb
+				25nPSQyCgoJbG9jYWwgd29yZCBhcmcxIHZhbD0iIgoJZm9yIHdvcmQgaW4gIiR7d29yZHNbQF06MX0iOyBkbyAgCgkJaWYgW1sgJH
+				ZhbCA9PSBAIF1dOyB0aGVuCgkJCXZhbD0kd29yZAoJCWVsaWYgW1sgJHdvcmQgPT0gJHNob3J0KiBdXTsgdGhlbgoJCQl2YWw9JHt
+				3b3JkOjJ9CgkJCVtbIC1uICR2YWwgXV0gfHwgdmFsPUAKCQllbGlmIFtbICR3b3JkID09ICRsb25nPSogXV07IHRoZW4KCQkJdmFs
+				PSR7d29yZC8qPX0KCQllbGlmIFtbICR3b3JkICE9IC0qICYmIC1uICR3b3JkICYmIC16ICRhcmcxIF1dOyB0aGVuCgkJCWFyZzE9J
+				HdvcmQKCQkJaWYgW1sgJHNob3J0ID09IC1TICYmICR3b3JkID1+IF5bMS05bl0kIF1dOyB0aGVuCgkJCQl2YWw9JHdvcmQgIAoJCQ
+				lmaQoJCWZpCglkb25lCgoJW1sgJHZhbCAhPSBAIF1dIHx8IHZhbD0iIgoJZWNobyAiJHZhbCIKfQoKX21hbnggIiRAIgo="
+	echo "$compscript" | base64 --decode
+	exit
 fi
 
 # --- Test to see whether the request man page exists ---

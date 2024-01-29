@@ -160,9 +160,11 @@ Manx \- view man pages in various ways on macOS
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
 
-.B manx \fR[\fIview-mode option\fR] [\fIother options ...\fR] [\fIsection\fR] \fIman-page\fR
+.B manx \fR[\fIview-mode option\fR] [\fIconfiguration options ...\fR] [\fIsection\fR] \fIman-page\fR
 .br
 .B manx \-\-clear\-cache
+.br
+.B manx \-\-completion
 .br
 .B manx \-\-help
 
@@ -175,7 +177,7 @@ View-mode options are mutually exclusive. If you pass more than one of them, the
       * \fB\-t\fR, \fB\-\-text\fR, \fB\-\-editor\fR, \fB\-\-editor=\fR\fIAppName\fR
       * \fB\-x\fR, \fB\-\-x\-man\-page\fR
 
-Other options can be combined with each other and any view mode:
+Configuration options can be combined with each other and any view mode:
       * \fB\-M\fR \fImanpath\fR, \fB\-\-manpath=\fR\fImanpath\fR
       * \fB\-S\fR \fIsections\fR, \fB\-\-sections=\fR\fIsections\fR
       * \fB\-\-clear\-cache\fR
@@ -229,8 +231,8 @@ or the app you pass with the \fB\-\-editor\fR option.
 Open the man page using macOS's x\-man\-page URL scheme,
 i.e. in a Terminal window with special formatting and colors.
 
-.SH "OTHER OPTIONS"
-.IX Header "OTHER OPTIONS"
+.SH "CONFIGURATION OPTIONS"
+.IX Header "CONFIGURATION OPTIONS"
 
 These options can be combined with each other, and used in any view mode.
 .\" --------------------
@@ -248,10 +250,27 @@ Works just like “\fBman -S\fR”.  Overrides the \fBMANSECT\fR environment var
 .IX Item "--clear-cache"
 Remove cached generated HTML/PDF/text files, from previous invocations of \fBmanx\fR.
 You may use this option with or without viewing a man page.
+
+.SH "SPECIAL OPTIONS"
+.IX Header "SPECIAL OPTIONS"
+
+These options make Manx do something other than view a man page.
+.\" --------------------
+.IP "\fB\-\-completion\fR" 5
+.IX Item "--completion"
+Output shell script that implements command\-line completion for Manx in zsh, then exit.
+If you already have zsh's completion system set up, and you're running “compinit” in your ~/.zshrc file,
+running a command along these lines should be all that's needed to begin using Manx's completions:
+
+manx \-\-completion > "$fpath[1]/_manx" && rm \-f ~/.zcompdump
+
+Zsh's completion system is documented in full here:
+.br
+https://zsh.sourceforge.io/Doc/Release/Completion-System.html
 .\" --------------------
 .IP "\fB\-\-help\fR" 5
 .IX Item "--help"
-Display usage information and immediately exit, without attempting to view a man page.
+Display usage information and immediately exit.
 
 .SH "ENVIRONMENT"
 .IX Header "ENVIRONMENT"
