@@ -1,5 +1,5 @@
 <div align="center">
-	<img width=340 alt="Screenshot" src="Manx_Screenshot.png">
+	<img width=330 alt="Screenshot" src="Manx_Screenshot.png">
     &nbsp;&nbsp;&nbsp;&nbsp;
 	<img alt="A Manx cat says: RTFM, yo" src="Manx_RTFM.jpg">
 </div>
